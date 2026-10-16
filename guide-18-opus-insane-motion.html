@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opus 5.5: 2레이어 실사 모션그래픽 & Motion OS 에디터 마스터 가이드</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    
+    <style>
+        :root { --bg-color: #0f1115; --card-bg: #1a1d24; --text-main: #e2e8f0; --text-sub: #94a3b8; --accent: #6366f1; --success: #10b981; --step-color: #f59e0b; --border-color: #2d3748; }
+        body { font-family: 'Pretendard', sans-serif; line-height: 1.5; color: var(--text-main); background-color: var(--bg-color); margin: 0; padding: 40px 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 40px; padding-bottom: 30px; border-bottom: 1px solid var(--border-color); }
+        .badge { background: rgba(99, 102, 241, 0.1); color: #818cf8; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; display: inline-block; margin-bottom: 15px; border: 1px solid rgba(99, 102, 241, 0.2); user-select: none; cursor: pointer; }
+        h1 { font-size: 32px; font-weight: 800; margin: 0 0 15px 0; letter-spacing: -0.5px; color: #fff; }
+        .source-link { color: var(--text-sub); font-size: 14px; margin-top: 10px; }
+        
+        /* 📊 인터랙티브 PPT 슬라이드 덱 CSS */
+        .ppt-wrapper { margin: 40px 0; background: #000; padding: 20px; border-radius: 16px; border: 1px solid var(--accent); box-shadow: 0 10px 30px rgba(99, 102, 241, 0.15); position: relative; }
+        .ppt-header { display: flex; justify-content: space-between; color: var(--text-sub); font-size: 13px; margin-bottom: 15px; font-weight: 600; padding: 0 10px; }
+        
+        .ppt-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.5); color: white; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; z-index: 10; font-size: 18px; transition: all 0.2s; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .ppt-nav-btn:hover { background: var(--accent); box-shadow: 0 0 15px var(--accent); scale: 1.1; }
+        .ppt-prev { left: 30px; }
+        .ppt-next { right: 30px; }
+
+        .ppt-container { display: flex; overflow-x: auto; gap: 20px; padding-bottom: 10px; scroll-snap-type: x mandatory; scroll-behavior: smooth; cursor: pointer; }
+        .ppt-container::-webkit-scrollbar { display: none; }
+        
+        .slide { flex: 0 0 100%; height: 500px; background: linear-gradient(135deg, #1e1e2f 0%, #151522 100%); border-radius: 12px; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.05); position: relative; user-select: none; transition: background 0.3s; }
+        .slide:hover { background: linear-gradient(135deg, #25253a 0%, #1a1a2b 100%); }
+        .slide-num { position: absolute; top: 20px; left: 20px; font-size: 14px; font-weight: 800; color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); padding: 4px 12px; border-radius: 20px; }
+        
+        .slide-illustration { width: 110px; height: 110px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%); border: 2px solid rgba(255,255,255,0.1); border-radius: 28px; display: flex; justify-content: center; align-items: center; font-size: 46px; color: #fff; margin: 0 auto 30px auto; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3), inset 0 0 20px rgba(255,255,255,0.05); position: relative; transform: rotate(-3deg); transition: transform 0.4s ease; }
+        .slide:hover .slide-illustration { transform: rotate(3deg) scale(1.05); }
+        .icon-badge { position: absolute; bottom: -12px; right: -12px; background: var(--success); width: 42px; height: 42px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px; border: 3px solid #1a1a2b; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .icon-badge.purple { background: #c084fc; }
+        .icon-badge.orange { background: var(--step-color); }
+        .icon-badge.blue { background: #38bdf8; }
+        .icon-badge.red { background: #f43f5e; }
+        .icon-badge.green { background: #10b981; }
+
+        .slide h2 { color: #a5b4fc; font-size: 30px; margin: 0 0 20px 0; font-weight: 800; line-height: 1.3; }
+        .slide ul { text-align: left; margin-top: 20px; padding-left: 20px; }
+        .slide ul li { font-size: 16px; color: #e2e8f0; margin-bottom: 12px; line-height: 1.6; list-style-type: disc; }
+        .slide p { font-size: 16px; color: #cbd5e1; line-height: 1.6; margin: 0; word-break: keep-all; }
+        .slide .highlight { color: #34d399; font-weight: 700; }
+        .click-hint { position: absolute; bottom: 20px; font-size: 12px; color: rgba(255,255,255,0.2); font-weight: 600; letter-spacing: 1px; }
+
+        /* 본문 내용 상세 박스 */
+        details { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 15px; overflow: hidden; }
+        details[open] { border-color: var(--step-color); box-shadow: 0 0 0 1px var(--step-color); }
+        summary { padding: 20px; font-size: 17px; font-weight: 700; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; color: #fff; }
+        summary::-webkit-details-marker { display: none; }
+        summary:after { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--text-sub); transition: transform 0.2s; }
+        details[open] summary:after { transform: rotate(180deg); color: var(--step-color); }
+        .step-num { display: inline-block; background: var(--step-color); color: #fff; border-radius: 6px; padding: 4px 10px; font-size: 14px; margin-right: 12px; font-weight: 800; }
+        .content-box { padding: 0 25px 25px 25px; border-top: 1px solid var(--border-color); margin-top: 5px; padding-top: 25px; }
+        .highlight-box { background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success); padding: 15px; border-radius: 0 8px 8px 0; margin-bottom: 25px; font-size: 15px; font-weight: 600; color: var(--success); line-height: 1.5; }
+        .content-box ol, .content-box ul { padding-left: 20px; margin: 0; }
+        .content-box li { margin-bottom: 18px; font-size: 15px; color: var(--text-main); line-height: 1.6; padding-left: 5px; word-break: keep-all; }
+        .content-box ol li::marker { font-weight: 800; color: var(--step-color); font-size: 16px; }
+        .content-box ul { list-style: none; }
+        .content-box ul li { position: relative; padding-left: 24px; }
+        .content-box ul li::before { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; left: 0; top: 2px; color: var(--accent); font-size: 14px; }
+        li span.tag { color: #fff; font-weight: 700; margin-right: 8px; font-size: 16px; }
+        .prompt-box { background: #0b0c10; border: 1px solid #374151; padding: 20px; border-radius: 8px; font-size: 14px; color: #818cf8; margin-top: 15px; font-family: monospace; line-height: 1.6; }
+        #admin-backup { display: none; margin-top: 40px; border-color: #ef4444; }
+        .backup-summary { color: #fca5a5; font-size: 15px; }
+        .backup-content { background: #0b0c10; color: #64748b; font-size: 13px; font-family: monospace; max-height: 250px; overflow-y: auto; padding: 20px; border-top: 1px solid #ef4444; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+            <a href="index.html" style="color: var(--text-sub); text-decoration: none; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: color 0.2s;">
+                <i class="fa-solid fa-arrow-left"></i> 대문으로 돌아가기
+            </a>
+            <div class="badge" ondblclick="toggleBackup()" style="margin-bottom: 0;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> AI & AUTOMATION (DEEP-DIVE)
+            </div>
+        </div>
+        <h1>Opus 5.5: 2레이어 실사 모션그래픽 & Motion OS 에디터 마스터 가이드</h1>
+        <div class="source-link">
+            <i class="fa-solid fa-book-open"></i> 자체 검증 심화 파이프라인
+        </div>
+    </header>
+
+    <!-- 📊 클릭 반응형 웹 내장 PPT 슬라이드 섹션 (10장) -->
+    <div class="ppt-wrapper">
+        <div class="ppt-header">
+            <span><i class="fa-solid fa-desktop"></i> Claude Motion Graphic Mastery</span>
+            <span>마우스 클릭 또는 화살표 버튼으로 넘겨보세요</span>
+        </div>
+        
+        <button class="ppt-nav-btn ppt-prev" onclick="moveSlide(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="ppt-nav-btn ppt-next" onclick="moveSlide(1)"><i class="fa-solid fa-chevron-right"></i></button>
+
+        <div class="ppt-container" id="ppt-container" onclick="moveSlide(1)">
+            <!-- Slide 1 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 01</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%); transform: rotate(-3deg);">
+                    <i class="fa-solid fa-rocket"></i>
+                    <div class="icon-badge blue"><i class="fa-solid fa-play"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>애플, 오픈AI 급 런칭 비디오 제작</h2>
+                    <p>Fable이나 Astra보다 뛰어난 <a href="https://www.youtube.com/watch?v=J4oygRI6mN0" style="color:#a5b4fc; text-decoration:none;">Opus 5.5</a>를 활용합니다.<br>단순한 2D 애니메이션을 넘어, <strong>진짜 사람(AI 배우)이 나오는 실사 영상 위에</strong><br><span class="highlight">세련된 모션그래픽 UI를 합성하는 '2-Layer' 기법</span>을 완벽 분석합니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+            
+            <!-- Slide 2 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 02</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%); transform: rotate(3deg);">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i>
+                    <div class="icon-badge purple"><i class="fa-solid fa-1"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>레퍼런스 발굴: watchships.com</h2>
+                    <p>X(트위터)에서 수작업으로 찾지 마세요.<br><br>수많은 브랜드 런칭 영상이 모여있는 <strong>watchships.com</strong>에서<br>마음에 드는 UI 모션 영상을 하나 찾아냅니다.<br>(예: Stripe, Ramp, OpenAI 스타일)</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 3 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 03</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%); transform: rotate(-2deg);">
+                    <i class="fa-solid fa-code-compare"></i>
+                    <div class="icon-badge orange"><i class="fa-solid fa-2"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>스타일 복제 및 브랜드 커스텀</h2>
+                    <p>클로드에게 두 가지 링크를 던집니다.<br><br>1. 찾아낸 <strong>레퍼런스 영상 URL</strong><br>2. 내 앱(제품)의 <strong>UI 디자인 및 브랜드 컬러 정보</strong><br><span class="highlight">"이 스타일을 차용하되, 내 제품 컬러와 UI로 커스텀해서 코드 짜줘."</span></p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 4 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 04</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(244, 63, 94, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%); transform: rotate(4deg);">
+                    <i class="fa-solid fa-pen-ruler"></i>
+                    <div class="icon-badge red"><i class="fa-solid fa-gear"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>신의 한 수: Motion OS 에디터</h2>
+                    <p>클로드가 짠 코드를 수정하기 위해 스크린샷 캡쳐 후 마크업하는 건 하수입니다.<br><br>직접 개발한 <strong>'Motion OS' 스킬</strong>을 설치하면<br>클로드 내부에 <span class="highlight">드래그 앤 드롭이 가능한 타임라인 편집기</span>가 열리며<br>위치, 텍스트, 속성을 직관적으로 수정하고 프롬프트로 역변환해 줍니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 5 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 05</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(56, 189, 248, 0.2) 100%); transform: rotate(-4deg);">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <div class="icon-badge blue"><i class="fa-solid fa-3"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>레벨 2: '2-Layer' 합성 런칭 비디오</h2>
+                    <p>애플이나 오픈AI처럼 실사 위에 그래픽을 얹습니다.<br><br><span class="highlight">Layer 1 (배경):</span> AI 실사 배우와 사무실 영상<br><span class="highlight">Layer 2 (오버레이):</span> 코드로 짠 UI 모션그래픽<br>이 두 레이어를 결합하여 극강의 프로페셔널한 영상을 완성합니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 6 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 06</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(192, 132, 252, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%); transform: rotate(2deg);">
+                    <i class="fa-solid fa-users-viewfinder"></i>
+                    <div class="icon-badge purple"><i class="fa-solid fa-4"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>Layer 1 구축 A: 캐릭터 시트</h2>
+                    <p>AI 영상은 무조건 <strong>캐릭터 시트(Character Sheet)</strong>부터 시작합니다.<br><br>Pinterest에서 긁어온 레퍼런스 인물을 던져주고,<br><span class="highlight">Higgsfield MCP (CeDream Pro 5)</span>를 활용해<br>다양한 각도의 일관된 얼굴 뼈대를 확정합니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 7 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 07</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%); transform: rotate(-3deg);">
+                    <i class="fa-solid fa-building"></i>
+                    <div class="icon-badge blue"><i class="fa-solid fa-5"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>Layer 1 구축 B: 공간과 합성</h2>
+                    <p>캐릭터가 확정되면, 이번엔 공간을 만듭니다.<br><br><strong>Soul Cinema 모델</strong>을 활용해 멋진 오피스 배경을 뽑은 뒤,<br>클로드에게 두 이미지를 주며 <span class="highlight">"캐릭터를 이 오피스 공간에 자연스럽게 배치해 줘"</span>라고 지시하여 씬을 세팅합니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 8 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 08</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%); transform: rotate(3deg);">
+                    <i class="fa-solid fa-video"></i>
+                    <div class="icon-badge orange"><i class="fa-solid fa-6"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>원샷 생성 금지! 480p 초안(Draft) 전략</h2>
+                    <p>이 모든 걸 한 번에 영상으로 렌더링하면<br>그냥 'AI Slop(싸구려 퀄리티)'이 나와버립니다.<br><br>반드시 <strong>이미지로 구도를 완벽히 고정</strong>시킨 다음,<br><span class="highlight">Seedance 2.5에서 480p 초안으로 먼저 애니메이팅</span>하여<br>에러를 체크해야 크레딧을 아낄 수 있습니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 9 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 09</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(244, 63, 94, 0.2) 100%); transform: rotate(-2deg);">
+                    <i class="fa-solid fa-music"></i>
+                    <div class="icon-badge red"><i class="fa-solid fa-check"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>오디오 수동 싱크의 중요성</h2>
+                    <p>오퍼스에게 음악 생성을 맡기면 퀄리티가 현저히 떨어집니다.<br><br><strong>Epidemic Sound</strong> 같은 전문 사이트에서 음원과 타격음(SFX)을 구해<br><span class="highlight">"버블이 팝업될 때 사운드를 맞추고, 부드럽게 페이드인/아웃 해 줘"</span>라고<br>명확히 지시해야 영상이 비로소 살아 숨 쉽니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 10 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 10</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%); transform: rotate(4deg);">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <div class="icon-badge green"><i class="fa-solid fa-eye"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>한계점과 현실적인 팁</h2>
+                    <ul>
+                        <li><span class="highlight">모델 믹스:</span> 최신 모델이 무조건 좋진 않습니다. 레퍼런스가 필요한 실사는 CeDream 5 Pro, 랜덤 생성은 Soul 2.0 등 목적에 맞게 섞어 써야 합니다.</li>
+                        <li><span class="highlight">AI 말하기 한계:</span> 실사 AI가 립싱크하며 말하는 장면은 아직 인위적입니다. 나레이션 오버레이 방식으로 연출하는 것이 훨씬 프로페셔널합니다.</li>
+                    </ul>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📖 심화 텍스트 본문 섹션 -->
+    <details open>
+        <summary><i class="fa-solid fa-gear step-num" style="padding:4px 8px;"></i> 1. 레퍼런스 기반 2D 모션 복제 및 Motion OS</summary>
+        <div class="content-box">
+            <div class="highlight-box">
+                <i class="fa-solid fa-lightbulb"></i> 핵심 원리: 처음부터 무에서 유를 창조하지 마세요. 검증된 레퍼런스를 먹이고, 내 브랜드 에셋으로 '치환'하는 것이 고퀄리티 런칭 영상의 비밀입니다.
+            </div>
+            <ul>
+                <li><span class="tag">watchships.com 활용:</span> X(트위터)에 떠도는 수많은 제품 런칭 영상(Stripe, Ramp 등)을 모아둔 데이터베이스 사이트에서 내 제품과 결이 맞는 레퍼런스 URL을 발췌합니다.</li>
+                <li><span class="tag">브랜드 치환 프롬프트:</span> 클로드에게 레퍼런스 URL과 내 앱(예: 인보이스 관리 앱 Quicksand)의 UI/컬러 정보를 줍니다. <i>"Ren의 영상을 프레임 단위로 분석하고, 뼈대는 유지하되 컬러와 UI 요소는 내 앱에 맞게 창작해서 교체해 줘"</i>라고 지시합니다.</li>
+                <li><span class="tag">마법의 Motion OS 스킬:</span> 코드로 짜인 UI를 수정할 때 스크린샷에 빨간펜을 칠해 다시 프롬프팅하는 것은 매우 소모적입니다. <strong>'Motion OS' 스킬(클로드 내부 에디터)</strong>을 설치하면, 캡컷(CapCut)처럼 타임라인과 오브젝트 속성창이 떠서 마우스로 직접 텍스트나 크기를 수정하고 이를 다시 완벽한 클로드 프롬프트 코드로 변환해 줍니다.</li>
+            </ul>
+        </div>
+    </details>
+
+    <details>
+        <summary><i class="fa-solid fa-layer-group step-num" style="padding:4px 8px;"></i> 2. 궁극의 2-Layer 기법: 실사 비디오 + UI 오버레이</summary>
+        <div class="content-box">
+            <ul>
+                <li><span class="tag">레벨 2 파이프라인:</span> OpenAI나 Anthropic의 런칭 영상처럼, <strong>실제 사람이 걸어가는 시네마틱 영상(Layer 1) 위에 화려한 UI 모션그래픽(Layer 2)을 합성하는 방식</strong>입니다. 이 두 레이어를 철저히 분리해서 작업한 뒤 합쳐야만 프로페셔널한 결과물이 나옵니다.</li>
+                <li><span class="tag">Layer 1 생성 순서 엄수:</span>
+                    <ol>
+                        <li><strong>캐릭터 확정:</strong> 레퍼런스 이미지를 주고 <code>CeDream Pro 5</code>를 이용해 다각도 캐릭터 시트를 생성합니다.</li>
+                        <li><strong>배경 생성:</strong> <code>Soul Cinema</code> 모델을 이용해 15,000 크레딧 무료 혜택으로 사무실 배경을 뽑습니다.</li>
+                        <li><strong>결합 및 씬 분할:</strong> 캐릭터와 배경을 합성한 완벽한 '정지 이미지' 씬들을 탑다운, 클로즈업 등 여러 각도로 만듭니다.</li>
+                        <li><strong>애니메이팅:</strong> 확정된 정지 이미지를 <code>Seedance 2.5</code>에 넣고 움직임을 부여합니다.</li>
+                    </ol>
+                </li>
+            </ul>
+            <div class="prompt-box">
+                [경고: 원샷 생성 금지!]<br>
+                텍스트 프롬프트 하나로 "사무실에서 걸어 나오는 남자를 그려줘"라고 한 번에 영상을 뽑으면 백이면 백 싸구려 'AI Slop(찌꺼기)' 느낌이 납니다. 반드시 '이미지 확정 -> 영상 변환'이라는 분절된 파이프라인을 지켜야 합니다.
+            </div>
+        </div>
+    </details>
+
+    <details>
+        <summary><i class="fa-solid fa-coins step-num" style="padding:4px 8px;"></i> 3. 모델 교차 사용과 비용 최적화 (Draft 전략)</summary>
+        <div class="content-box">
+            <ul>
+                <li><span class="tag">무조건 최신 모델이 정답은 아니다:</span>
+                    <ul>
+                        <li><strong>Soul 2.0 (Higgsfield):</strong> 랜덤한 고퀄리티 인물 사진을 대량으로 무료(15,000장)로 뽑을 때 최고. 단, 레퍼런스 이미지 첨부 불가.</li>
+                        <li><strong>CeDream Pro 5:</strong> 특정 레퍼런스 이미지를 기반으로 일관된 얼굴(캐릭터 시트)을 뽑아낼 때 가성비가 가장 좋음.</li>
+                    </ul>
+                </li>
+                <li><span class="tag">Seedance 2.5 초안 렌더링:</span> 비디오 렌더링 시 처음부터 1080p 고해상도로 뽑으면 크레딧이 순식간에 녹아내립니다. 에러 확률이 높으므로 <strong>반드시 480p 초안(Draft)으로 프레임과 액션을 확인</strong>한 후, 통과된 프롬프트만 1080p로 최종 렌더링하세요.</li>
+            </ul>
+        </div>
+    </details>
+
+    <details>
+        <summary><i class="fa-solid fa-music step-num" style="padding:4px 8px;"></i> 4. 사운드 믹싱과 AI 실사 영상의 한계점</summary>
+        <div class="content-box">
+            <ul>
+                <li><span class="tag">음향 수동 통제:</span> 클로드에게 BGM 작곡까지 맡기면 영상 무드와 어울리지 않습니다. Epidemic Sound 같은 곳에서 고품질 음원을 구한 뒤, <i>"채팅 버블이 뜰 때 팝업 사운드 효과(SFX)를 맞추고, BGM을 페이드인/아웃 시켜 줘"</i>라고 명확히 지시해야 모션이 살아납니다.</li>
+                <li><span class="tag">입모양 립싱크의 한계:</span> 현존하는 AI 기술로 실사 AI 캐릭터가 정면을 보고 유창하게 대사를 치는 모습은 여전히 기계적이고 인위적인 느낌(Uncanny Valley)을 줍니다. 가급적 인물은 자연스러운 액션만 취하게 하고, 나레이션 오디오를 백그라운드로 까는 연출이 훨씬 세련됩니다.</li>
+            </ul>
+        </div>
+    </details>
+
+    <!-- [AI 분석 전용] 스텔스 지식 베이스 -->
+    <details id="admin-backup" class="backup-details">
+        <summary class="backup-summary"><i class="fa-solid fa-lock"></i> [AI DB] 스텔스 지식 베이스 자료</summary>
+        <div class="backup-content">
+            [참고 콘텐츠 메타데이터]<br>
+            - 영상 제목: How I Make Insane Motion Graphics with Opus 5.5 (Better than Fable or Astra)<br>
+            - 채널명: Jason Lee<br>
+            - 핵심 키워드: Opus 5.5, watchships.com, Motion OS, 2-Layer 기법 (실사 + 모션), 캐릭터 시트, CeDream Pro 5, Soul Cinema, Seedance 2.5 480p Draft<br><br>
+            [지식 베이스 분석 메모]<br>
+            Fable/Astra를 뛰어넘는 Opus 5.5의 모션그래픽 생성력을 극대화하는 파이프라인. Level 1은 watchships.com에서 레퍼런스를 가져와 자사 브랜드로 UI를 교체하고, Motion OS라는 자체 에디터를 통해 드래그앤드롭으로 코드를 직관적으로 수정함. Level 2는 실사 비디오(Layer 1) 위에 모션그래픽(Layer 2)을 얹는 기법. Layer 1 제작 시 절대 원샷 생성을 금지하고, 1) CeDream 5 Pro로 캐릭터 픽스, 2) Soul Cinema로 배경 픽스, 3) 둘 합성, 4) Seedance 2.5 480p로 테스트 후 1080p로 최종 렌더링하는 철저한 순서를 거침. 립싱크는 부자연스러우므로 나레이션으로 덮는 것을 권장함.
+        </div>
+    </details>
+
+</div>
+
+<script>
+    function toggleBackup() {
+        const backupSection = document.getElementById('admin-backup');
+        if (backupSection.style.display === 'none' || backupSection.style.display === '') {
+            backupSection.style.display = 'block';
+            alert("🔓 관리자 모드: AI 스텔스 지식 베이스가 활성화되었습니다.");
+        } else {
+            backupSection.style.display = 'none';
+        }
+    }
+
+    function moveSlide(direction) {
+        const container = document.getElementById('ppt-container');
+        if (event && event.stopPropagation) event.stopPropagation();
+        const slideWidth = container.clientWidth;
+        container.scrollBy({ left: direction * slideWidth, behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>

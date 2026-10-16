@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>클로드 오퍼스 5.5: 편집 툴 없는 모션그래픽 완전 자동화 가이드</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    
+    <style>
+        :root { --bg-color: #0f1115; --card-bg: #1a1d24; --text-main: #e2e8f0; --text-sub: #94a3b8; --accent: #6366f1; --success: #10b981; --step-color: #f59e0b; --border-color: #2d3748; }
+        body { font-family: 'Pretendard', sans-serif; line-height: 1.5; color: var(--text-main); background-color: var(--bg-color); margin: 0; padding: 40px 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 40px; padding-bottom: 30px; border-bottom: 1px solid var(--border-color); }
+        .badge { background: rgba(99, 102, 241, 0.1); color: #818cf8; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; display: inline-block; margin-bottom: 15px; border: 1px solid rgba(99, 102, 241, 0.2); user-select: none; cursor: pointer; }
+        h1 { font-size: 32px; font-weight: 800; margin: 0 0 15px 0; letter-spacing: -0.5px; color: #fff; }
+        .source-link { color: var(--text-sub); font-size: 14px; margin-top: 10px; }
+        
+        /* 📊 인터랙티브 PPT 슬라이드 덱 CSS */
+        .ppt-wrapper { margin: 40px 0; background: #000; padding: 20px; border-radius: 16px; border: 1px solid var(--accent); box-shadow: 0 10px 30px rgba(99, 102, 241, 0.15); position: relative; }
+        .ppt-header { display: flex; justify-content: space-between; color: var(--text-sub); font-size: 13px; margin-bottom: 15px; font-weight: 600; padding: 0 10px; }
+        
+        .ppt-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.5); color: white; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; z-index: 10; font-size: 18px; transition: all 0.2s; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .ppt-nav-btn:hover { background: var(--accent); box-shadow: 0 0 15px var(--accent); scale: 1.1; }
+        .ppt-prev { left: 30px; }
+        .ppt-next { right: 30px; }
+
+        .ppt-container { display: flex; overflow-x: auto; gap: 20px; padding-bottom: 10px; scroll-snap-type: x mandatory; scroll-behavior: smooth; cursor: pointer; }
+        .ppt-container::-webkit-scrollbar { display: none; }
+        
+        .slide { flex: 0 0 100%; height: 500px; background: linear-gradient(135deg, #1e1e2f 0%, #151522 100%); border-radius: 12px; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.05); position: relative; user-select: none; transition: background 0.3s; }
+        .slide:hover { background: linear-gradient(135deg, #25253a 0%, #1a1a2b 100%); }
+        .slide-num { position: absolute; top: 20px; left: 20px; font-size: 14px; font-weight: 800; color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); padding: 4px 12px; border-radius: 20px; }
+        
+        .slide-illustration { width: 110px; height: 110px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%); border: 2px solid rgba(255,255,255,0.1); border-radius: 28px; display: flex; justify-content: center; align-items: center; font-size: 46px; color: #fff; margin: 0 auto 30px auto; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3), inset 0 0 20px rgba(255,255,255,0.05); position: relative; transform: rotate(-3deg); transition: transform 0.4s ease; }
+        .slide:hover .slide-illustration { transform: rotate(3deg) scale(1.05); }
+        .icon-badge { position: absolute; bottom: -12px; right: -12px; background: var(--success); width: 42px; height: 42px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px; border: 3px solid #1a1a2b; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .icon-badge.purple { background: #c084fc; }
+        .icon-badge.orange { background: var(--step-color); }
+        .icon-badge.blue { background: #38bdf8; }
+        .icon-badge.red { background: #f43f5e; }
+        .icon-badge.green { background: #10b981; }
+
+        .slide h2 { color: #a5b4fc; font-size: 30px; margin: 0 0 20px 0; font-weight: 800; line-height: 1.3; }
+        .slide ul { text-align: left; margin-top: 20px; padding-left: 20px; }
+        .slide ul li { font-size: 16px; color: #e2e8f0; margin-bottom: 12px; line-height: 1.6; list-style-type: disc; }
+        .slide p { font-size: 16px; color: #cbd5e1; line-height: 1.6; margin: 0; word-break: keep-all; }
+        .slide .highlight { color: #34d399; font-weight: 700; }
+        .click-hint { position: absolute; bottom: 20px; font-size: 12px; color: rgba(255,255,255,0.2); font-weight: 600; letter-spacing: 1px; }
+
+        /* 본문 내용 상세 박스 */
+        details { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 15px; overflow: hidden; }
+        details[open] { border-color: var(--step-color); box-shadow: 0 0 0 1px var(--step-color); }
+        summary { padding: 20px; font-size: 17px; font-weight: 700; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; color: #fff; }
+        summary::-webkit-details-marker { display: none; }
+        summary:after { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--text-sub); transition: transform 0.2s; }
+        details[open] summary:after { transform: rotate(180deg); color: var(--step-color); }
+        .step-num { display: inline-block; background: var(--step-color); color: #fff; border-radius: 6px; padding: 4px 10px; font-size: 14px; margin-right: 12px; font-weight: 800; }
+        .content-box { padding: 0 25px 25px 25px; border-top: 1px solid var(--border-color); margin-top: 5px; padding-top: 25px; }
+        .highlight-box { background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success); padding: 15px; border-radius: 0 8px 8px 0; margin-bottom: 25px; font-size: 15px; font-weight: 600; color: var(--success); line-height: 1.5; }
+        .content-box ol, .content-box ul { padding-left: 20px; margin: 0; }
+        .content-box li { margin-bottom: 18px; font-size: 15px; color: var(--text-main); line-height: 1.6; padding-left: 5px; word-break: keep-all; }
+        .content-box ol li::marker { font-weight: 800; color: var(--step-color); font-size: 16px; }
+        .content-box ul { list-style: none; }
+        .content-box ul li { position: relative; padding-left: 24px; }
+        .content-box ul li::before { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; left: 0; top: 2px; color: var(--accent); font-size: 14px; }
+        li span.tag { color: #fff; font-weight: 700; margin-right: 8px; font-size: 16px; }
+        .prompt-box { background: #0b0c10; border: 1px solid #374151; padding: 20px; border-radius: 8px; font-size: 14px; color: #818cf8; margin-top: 15px; font-family: monospace; line-height: 1.6; }
+        #admin-backup { display: none; margin-top: 40px; border-color: #ef4444; }
+        .backup-summary { color: #fca5a5; font-size: 15px; }
+        .backup-content { background: #0b0c10; color: #64748b; font-size: 13px; font-family: monospace; max-height: 250px; overflow-y: auto; padding: 20px; border-top: 1px solid #ef4444; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+            <a href="index.html" style="color: var(--text-sub); text-decoration: none; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: color 0.2s;">
+                <i class="fa-solid fa-arrow-left"></i> 대문으로 돌아가기
+            </a>
+            <div class="badge" ondblclick="toggleBackup()" style="margin-bottom: 0;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> AI & AUTOMATION (DEEP-DIVE)
+            </div>
+        </div>
+        <h1>클로드 오퍼스 5.5: 편집 툴 없는 모션그래픽 완전 자동화 가이드</h1>
+        <div class="source-link">
+            <i class="fa-solid fa-book-open"></i> 자체 검증 심화 파이프라인
+        </div>
+    </header>
+
+    <!-- 📊 클릭 반응형 웹 내장 PPT 슬라이드 섹션 (10장) -->
+    <div class="ppt-wrapper">
+        <div class="ppt-header">
+            <span><i class="fa-solid fa-desktop"></i> Claude Motion Graphic Mastery</span>
+            <span>마우스 클릭 또는 화살표 버튼으로 넘겨보세요</span>
+        </div>
+        
+        <button class="ppt-nav-btn ppt-prev" onclick="moveSlide(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="ppt-nav-btn ppt-next" onclick="moveSlide(1)"><i class="fa-solid fa-chevron-right"></i></button>
+
+        <div class="ppt-container" id="ppt-container" onclick="moveSlide(1)">
+            <!-- Slide 1 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 01</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%); transform: rotate(-3deg);">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <div class="icon-badge blue"><i class="fa-solid fa-play"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>영상 툴 없이 코딩으로만 그리다</h2>
+                    <p>프리미어나 에프터이펙트는 단 1초도 켜지 않습니다.<br><strong>클로드 오퍼스 5.5 (Claude Opus 5.5)</strong>의 강력한 추론 능력을 활용해<br>오직 프롬프트와 오디오 파일만으로<br><span class="highlight">전문가 수준의 모션그래픽을 렌더링</span>하는 파이프라인입니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+            
+            <!-- Slide 2 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 02</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%); transform: rotate(3deg);">
+                    <i class="fa-solid fa-brain"></i>
+                    <div class="icon-badge purple"><i class="fa-solid fa-gear"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>필수 세팅: 사고 수준(Effort) 극대화</h2>
+                    <p>간단한 질문 답변용 세팅으로는 그래픽이 깨집니다.<br><br>클로드의 모델을 <strong>Opus 5.5</strong>로 고정하고,<br>노력/사고 수준(Effort)을 <span class="highlight">무조건 '높음(High)' 이상</span>으로 설정해야<br>복잡한 모션그래픽 코드를 완벽하게 짜냅니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 3 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 03</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%); transform: rotate(-2deg);">
+                    <i class="fa-solid fa-lightbulb"></i>
+                    <div class="icon-badge orange"><i class="fa-solid fa-1"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>방식 1: 주제 던지기 (자율 연출)</h2>
+                    <p>나레이션 파일과 <i>"라면은 왜 꼬불꼬불할까?"</i>라는 주제만 줍니다.<br><br><span class="highlight">"글자는 넣지 말고 그래픽으로만 보여줘"</span>라고 지시하면,<br>클로드가 스스로 '물방울', '초시계', '냄비 두 개'를 그려내며<br>대본에 딱 맞는 <strong>시각적 비유(Metaphor)</strong>를 자율 연출합니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 4 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 04</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(244, 63, 94, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%); transform: rotate(4deg);">
+                    <i class="fa-solid fa-file-video"></i>
+                    <div class="icon-badge red"><i class="fa-solid fa-eye"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>레퍼런스의 힘 (jasonzhu.ai)</h2>
+                    <p>아무것도 주지 않아도 잘 나오지만,<br><strong>jasonzhu.ai</strong> 같은 사이트에서 고퀄리티 레퍼런스 영상을 다운받아<br>클로드에게 <span class="highlight">"이 스타일을 모방해"</span>라고 첨부하면<br>원하는 톤앤매너에 100배 더 가까워집니다. (이미지 첨부도 가능)</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 5 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 05</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(56, 189, 248, 0.2) 100%); transform: rotate(-4deg);">
+                    <i class="fa-solid fa-scissors"></i>
+                    <div class="icon-badge blue"><i class="fa-solid fa-2"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>방식 2: 하이브리드 교육 영상 (종이 콜라주)</h2>
+                    <p>GPT로 뽑은 <strong>이미지 소스들</strong>과 나레이션 오디오를 함께 넣습니다.<br><br><i>"비행기 창문은 왜 둥글까? 종이 콜라주 느낌으로 만들어 줘."</i><br>결과: <span class="highlight">연도 스티커, 신문 기사, 고도 눈금 애니메이션</span> 등<br>당장 유튜브에 올려도 될 교육 콘텐츠가 완성됩니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 6 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 06</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(192, 132, 252, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%); transform: rotate(2deg);">
+                    <i class="fa-solid fa-music"></i>
+                    <div class="icon-badge purple"><i class="fa-solid fa-3"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>방식 3: 뮤직비디오 (자율 스토리텔링)</h2>
+                    <p>단순한 노래 파일만 넣고 <i>"흑백 잉크 스타일 뮤비 만들어"</i>라고 지시.<br><br>어떤 장면을 넣으라고 한 마디도 안 했는데,<br>화면 구석에 <strong>'자정'에서 '새벽 5시 반'으로 흐르는 시계</strong>를 스스로 배치해<br><span class="highlight">밤새 걸었다는 청춘 서사</span>를 스스로 창조해 냅니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 7 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 07</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%); transform: rotate(-3deg);">
+                    <i class="fa-solid fa-ear-listen"></i>
+                    <div class="icon-badge blue"><i class="fa-solid fa-bolt"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>Whisper 음성 인식: 칼같은 싱크</h2>
+                    <p>뮤직비디오 가사 타이밍을 사람이 일일이 찍지 않습니다.<br><br>클로드 내부에서 <strong>오픈AI의 Whisper(음성 인식 도구)</strong>를 자체적으로 돌려<br>노래를 듣고 <span class="highlight">가사가 나와야 할 0.1초 단위의 타이밍을<br>알아서 매칭</span>하고 후렴 반전까지 연출합니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 8 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 08</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%); transform: rotate(3deg);">
+                    <i class="fa-solid fa-link"></i>
+                    <div class="icon-badge orange"><i class="fa-solid fa-4"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>방식 4: 랜딩페이지 URL ➔ 상업 광고</h2>
+                    <p>번역 서비스 등 실제 운영 중인 <strong>랜딩페이지 주소(URL)</strong>를 줍니다.<br><br>외주에 맡기면 며칠은 걸릴 30초짜리 프로모션 영상을,<br>클로드가 사이트를 읽고 <span class="highlight">핵심 소구 기능만 골라내어<br>1시간 만에 광고 영상으로 탈바꿈</span>시킵니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 9 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 09</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(244, 63, 94, 0.2) 100%); transform: rotate(-2deg);">
+                    <i class="fa-solid fa-hourglass-half"></i>
+                    <div class="icon-badge red"><i class="fa-solid fa-clock"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>대기 시간과 프로세스 최적화</h2>
+                    <p>노력(Effort) 수준을 높게 설정했기 때문에,<br>15초 영상은 10분, <strong>30초~1분 영상은 약 1시간 정도 소요</strong>됩니다.<br><br>명령을 걸어두고 <span class="highlight">다른 업무(병렬 작업)를 진행</span>하는 식의<br>워크플로우를 구축하는 것이 가장 효율적입니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 10 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 10</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%); transform: rotate(4deg);">
+                    <i class="fa-solid fa-money-bill-trend-up"></i>
+                    <div class="icon-badge green"><i class="fa-solid fa-check"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>결론: 비싼 외주를 대체하는 도구</h2>
+                    <p>단순한 모션 생성기가 아니라 '기획자' 역할까지 수행합니다.<br><br>적절한 <strong>레퍼런스(영상/이미지) + 오디오 소스</strong>만 던져주면,<br>클로드 구독권 하나로 <span class="highlight">값비싼 모션그래픽 외주 비용을<br>드라마틱하게 절감</span>할 수 있습니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📖 심화 텍스트 본문 섹션 -->
+    <details open>
+        <summary><i class="fa-solid fa-gear step-num" style="padding:4px 8px;"></i> 1. 오퍼스 5.5 기본 세팅과 자율 연출의 힘</summary>
+        <div class="content-box">
+            <div class="highlight-box">
+                <i class="fa-solid fa-lightbulb"></i> 핵심 원리: 클로드가 영상의 내용을 스스로 이해하고 '시각적 비유(Metaphor)'를 만들어 내게 하려면, 모델은 Opus 5.5로 설정하고 사고 수준(Effort)을 무조건 '높음(High)' 이상으로 맞춰야 합니다.
+            </div>
+            <ul>
+                <li><span class="tag">맥락 기반 자율 연출:</span> <i>"라면은 왜 꼬불꼬불할까?"</i>라는 나레이션 오디오 파일만 주고, <i>"글자는 넣지 말고 그래픽으로만 표현해"</i>라고 지시합니다. 클로드는 '빨리 익는다'는 대목에서 <strong>물방울과 초시계</strong>를 스스로 그리고, '안 달라붙는다'는 대목에서 <strong>냄비 두 개를 나란히 비교</strong>하는 등 사람이 기획할 법한 연출을 스스로 짜냅니다.</li>
+                <li><span class="tag">레퍼런스 첨부(jasonzhu.ai):</span> 자율 연출도 훌륭하지만, <a href="https://jasonzhu.ai/en/prompts/claude-opus-5-5" target="_blank" style="color:var(--accent);">jasonzhu.ai</a> 같은 레퍼런스 사이트에서 고퀄리티 영상이나 이미지를 다운로드하여 프롬프트에 같이 던져주면 톤앤매너(색감, 아트웍)가 원하는 방향으로 100% 맞춰집니다.</li>
+            </ul>
+        </div>
+    </details>
+
+    <details>
+        <summary><i class="fa-solid fa-scissors step-num" style="padding:4px 8px;"></i> 2. 종이 콜라주 스타일 교육 콘텐츠 자동화</summary>
+        <div class="content-box">
+            <ul>
+                <li><span class="tag">하이브리드 리소스 주입:</span> 나레이션 오디오와 함께 GPT로 뽑아낸 개별 <strong>이미지 소스(비행기, 창문 등) 여러 장</strong>을 같이 클로드에 업로드합니다.</li>
+                <li><span class="tag">디테일한 모션 구현:</span> <i>"비행기 창문은 왜 둥글까? 종이 콜라주 느낌(Vox 스타일)으로 만들어 줘."</i>라고 하면, 클로드가 연도 스티커, 신문 기사 팝업, 고도 눈금, 힘이 모서리로 몰리는 화살표 애니메이션 등 <strong>디테일한 교육용 인포그래픽 모션</strong>을 완벽하게 조립해 냅니다. 당장 유튜브 정보성 채널에 올려도 될 퀄리티입니다.</li>
+            </ul>
+        </div>
+    </details>
+
+    <details>
+        <summary><i class="fa-solid fa-music step-num" style="padding:4px 8px;"></i> 3. 자율 스토리텔링 뮤직비디오와 Whisper 싱크</summary>
+        <div class="content-box">
+            <ul>
+                <li><span class="tag">자율 서사(Narrative) 창조:</span> 평범한 사랑 노래 오디오 파일만 넣고 <i>"흑백 잉크 스타일로 뮤비를 만들어 줘"</i>라고 던집니다. 클로드는 가사를 분석해 화면 구석에 <strong>'자정'에서 시작해 곡 끝부분 '새벽 5시 반'으로 변하는 시계</strong>를 배치하며, '밤새 걸었다'는 서사를 스스로 창조하는 경악스러운 기획력을 보여줍니다.</li>
+                <li><span class="tag">Whisper 음성 인식 기반 칼싱크:</span> 가사를 언제 화면에 띄울지 인간이 초를 재지 않습니다. 클로드는 내부적으로 <strong>OpenAI의 Whisper(음성 인식) 모델을 구동하여 노래를 듣고 타이밍을 스스로 계산</strong>해, 가사 타이포그래피와 후렴구 반전 효과를 음악의 리듬에 완벽하게 동기화합니다.</li>
+            </ul>
+        </div>
+    </details>
+
+    <details>
+        <summary><i class="fa-solid fa-link step-num" style="padding:4px 8px;"></i> 4. 랜딩페이지 URL 기반 상업 광고 공장</summary>
+        <div class="content-box">
+            <ul>
+                <li><span class="tag">URL 크롤링 및 요약:</span> 내가 운영하는 번역 서비스나 예약 서비스의 <strong>웹사이트 주소(URL)를 복사해서 붙여넣습니다.</strong></li>
+                <li><span class="tag">소구점 추출 및 영상화:</span> <i>"이 사이트 기반으로 광고 영상 만들어 줘."</i>라고 지시하면, 클로드가 사이트의 수많은 텍스트 중 핵심 기능(예: 예약 관리, 노쇼 방지 등)만 정확히 골라내어 30초짜리 깔끔한 프로모션 모션그래픽으로 뽑아냅니다. <strong>며칠 걸릴 외주 작업을 단 1시간 만에 끝냅니다.</strong></li>
+            </ul>
+            <div class="prompt-box">
+                [생산성 인사이트 및 실무 팁]<br>
+                추론 수준(Effort)을 높였기 때문에 코드를 짜고 영상을 렌더링하는 데 짧으면 10분, 길게는 1시간 이상 소요됩니다. 따라서 클로드가 일하는 동안 다른 업무를 병렬로 진행하는 워크플로우를 갖추는 것이 효율적이며, 반드시 레퍼런스(영상/이미지)를 함께 던져주어 톤앤매너 이탈을 방지해야 합니다.
+            </div>
+        </div>
+    </details>
+
+    <!-- [AI 분석 전용] 스텔스 지식 베이스 -->
+    <details id="admin-backup" class="backup-details">
+        <summary class="backup-summary"><i class="fa-solid fa-lock"></i> [AI DB] 스텔스 지식 베이스 자료</summary>
+        <div class="backup-content">
+            [참고 콘텐츠 메타데이터]<br>
+            - 영상 제목: 편집없이 클로드로 모션그래픽 만들기(Opus 5.5)<br>
+            - 채널명: 아일의 워크룸 | Asle's Workroom<br>
+            - 핵심 키워드: Claude Opus 5.5, Effort(높음), Whisper 음성 인식, 자율 스토리텔링(시계 연출), 종이 콜라주(Vox 스타일), URL 기반 광고 생성, jasonzhu.ai<br><br>
+            [지식 베이스 분석 메모]<br>
+            영상 편집 툴을 켜지 않고 클로드 오퍼스 5.5의 코딩 능력만으로 3가지 실무 모션그래픽을 만드는 심화 파이프라인. 1) 자율 연출: 나레이션 오디오만 주어도 물방울, 시계 등의 비유적 그래픽을 스스로 배치. 2) 교육 영상: 이미지 소스와 오디오를 넣고 Vox 스타일을 지시하면 연도 스티커, 눈금 등의 인포그래픽 연출. 3) 뮤직비디오: 노래만 던져도 내부 Whisper 기능으로 가사 타이밍을 자동 매핑하고, 자정~새벽이라는 서사를 스스로 창조함. 4) URL 광고: 웹사이트 주소를 읽고 핵심 소구점만 뽑아 상업 광고 렌더링. 생성에 10분~1시간이 소요되며, 레퍼런스를 필히 첨부해야 퀄리티가 보장됨.
+        </div>
+    </details>
+
+</div>
+
+<script>
+    function toggleBackup() {
+        const backupSection = document.getElementById('admin-backup');
+        if (backupSection.style.display === 'none' || backupSection.style.display === '') {
+            backupSection.style.display = 'block';
+            alert("🔓 관리자 모드: AI 스텔스 지식 베이스가 활성화되었습니다.");
+        } else {
+            backupSection.style.display = 'none';
+        }
+    }
+
+    function moveSlide(direction) {
+        const container = document.getElementById('ppt-container');
+        if (event && event.stopPropagation) event.stopPropagation();
+        const slideWidth = container.clientWidth;
+        container.scrollBy({ left: direction * slideWidth, behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code 피사체 분리 및 모션 그래픽 구현 가이드</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    
+    <style>
+        :root { --bg-color: #0f1115; --card-bg: #1a1d24; --text-main: #e2e8f0; --text-sub: #94a3b8; --accent: #6366f1; --success: #10b981; --step-color: #f59e0b; --border-color: #2d3748; }
+        body { font-family: 'Pretendard', sans-serif; line-height: 1.5; color: var(--text-main); background-color: var(--bg-color); margin: 0; padding: 40px 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 40px; padding-bottom: 30px; border-bottom: 1px solid var(--border-color); }
+        .badge { background: rgba(99, 102, 241, 0.1); color: #818cf8; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; display: inline-block; margin-bottom: 15px; border: 1px solid rgba(99, 102, 241, 0.2); user-select: none; cursor: pointer; }
+        h1 { font-size: 30px; font-weight: 800; margin: 0 0 15px 0; letter-spacing: -0.5px; color: #fff; }
+        .source-link { color: var(--text-sub); font-size: 14px; margin-top: 10px; }
+        .visual-summary { display: flex; gap: 15px; margin-bottom: 30px; }
+        .visual-card { flex: 1; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; text-align: center; }
+        .visual-card i { font-size: 28px; color: var(--accent); margin-bottom: 12px; }
+        .visual-card h3 { margin: 0 0 8px 0; font-size: 15px; color: #fff; }
+        .visual-card p { margin: 0; font-size: 13px; color: var(--text-sub); word-break: keep-all; }
+        details { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 15px; overflow: hidden; }
+        details[open] { border-color: var(--step-color); box-shadow: 0 0 0 1px var(--step-color); }
+        summary { padding: 18px 20px; font-size: 16px; font-weight: 600; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; color: #fff; }
+        summary::-webkit-details-marker { display: none; }
+        summary:after { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--text-sub); transition: transform 0.2s; }
+        details[open] summary:after { transform: rotate(180deg); color: var(--step-color); }
+        .step-num { display: inline-block; background: var(--step-color); color: #fff; border-radius: 6px; padding: 2px 8px; font-size: 14px; margin-right: 8px; }
+        .content-box { padding: 0 20px 20px 20px; border-top: 1px solid var(--border-color); margin-top: 5px; padding-top: 20px; }
+        .highlight-box { background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success); padding: 12px 15px; border-radius: 0 8px 8px 0; margin-bottom: 20px; font-size: 14px; font-weight: 600; color: var(--success); }
+        ol, ul { padding-left: 20px; margin: 0; }
+        li { margin-bottom: 16px; font-size: 14px; color: var(--text-main); line-height: 1.5; padding-left: 5px; }
+        ol li::marker { font-weight: 800; color: var(--step-color); }
+        ul { list-style: none; }
+        ul li { position: relative; padding-left: 24px; }
+        ul li::before { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; left: 0; top: 1px; color: var(--accent); font-size: 13px; }
+        li span.tag { color: #fff; font-weight: 600; margin-right: 6px; }
+        #admin-backup { display: none; margin-top: 40px; border-color: #ef4444; }
+        .backup-summary { color: #fca5a5; font-size: 15px; }
+        .backup-content { background: #0b0c10; color: #64748b; font-size: 13px; font-family: monospace; max-height: 250px; overflow-y: auto; padding: 20px; border-top: 1px solid #ef4444; }
+        @media (max-width: 600px) { .visual-summary { flex-direction: column; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <!-- 🧭 대문으로 돌아가기 상단 네비게이션 바 -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+            <a href="index.html" style="color: var(--text-sub); text-decoration: none; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: color 0.2s;">
+                <i class="fa-solid fa-arrow-left"></i> 대문으로 돌아가기
+            </a>
+            <div class="badge" ondblclick="toggleBackup()" style="margin-bottom: 0;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> AI & AUTOMATION
+            </div>
+        </div>
+        <h1>Claude Code 피사체 분리 및 모션 그래픽 구현 가이드</h1>
+        <div class="source-link">
+            <i class="fa-solid fa-book-open"></i> 자체 검증 실전 노하우 아카이브
+        </div>
+    </header>
+
+    <div class="visual-summary">
+        <div class="visual-card">
+            <i class="fa-solid fa-layer-group"></i>
+            <h3>피사체/배경 완벽 분리</h3>
+            <p>단일 영상의 인물과 배경을 분리해 피사체 등 뒤에 텍스트와 그래픽을 배치합니다.</p>
+        </div>
+        <div class="visual-card">
+            <i class="fa-solid fa-microchip"></i>
+            <h3>로컬 AI 무료 구동</h3>
+            <p>외부 유료 API가 아닌 내 PC 자원을 활용하여 오픈소스 추적 모델을 무료로 돌립니다.</p>
+        </div>
+        <div class="visual-card">
+            <i class="fa-solid fa-crosshairs"></i>
+            <h3>동적 모션 트래킹</h3>
+            <p>제품의 특정 포트나 움직이는 물체를 자연스럽게 따라다니는 이펙트를 만듭니다.</p>
+        </div>
+    </div>
+
+    <details open>
+        <summary><span class="step-num">STEP 1</span> 기초 환경 세팅 및 모델 준비</summary>
+        <div class="content-box">
+            <div class="highlight-box">
+                <i class="fa-solid fa-lightbulb"></i> 중요: 웹이나 가상 머신 환경이 아닌, 내 컴퓨터의 물리적 자원(GPU)을 직접 끌어다 쓰는 <strong>'Claude Code (로컬 CLI)'</strong>를 반드시 사용해야 합니다[cite: 6].
+            </div>
+            <ol>
+                <li><span class="tag">스킬 모듈 확보:</span> 오픈소스로 공유되고 있는 영상 분석 전용 스킬 단일 파일을 복사하여 프로젝트 내부에 구성합니다[cite: 6].</li>
+                <li><span class="tag">독립 폴더 격리:</span> 바탕화면 등에 '모션 그래픽 전용 빈 폴더'를 생성합니다. 이는 클로드의 이전 작업 기억과 프롬프트 셋팅이 새 영상 작업과 꼬이지 않도록 보호하는 필수 단계입니다[cite: 6].</li>
+                <li><span class="tag">로컬 환경 실행:</span> 클로드 코드를 실행하고, 방금 생성한 빈 폴더를 워크스페이스로 지정하여 깨끗한 상태에서 새 프로젝트를 시작합니다[cite: 6].</li>
+            </ol>
+        </div>
+    </details>
+
+    <details>
+        <summary><span class="step-num">STEP 2</span> 소스 업로드 및 자동 추적 구동</summary>
+        <div class="content-box">
+            <ol>
+                <li><span class="tag">최적 모델 선택:</span> 프레임 분석과 정교한 모션 렌더링 스크립트 작성에 가장 뛰어난 추론 능력을 보이는 <strong>'Opus 5.5 (Medium)'</strong> 이상의 모델로 환경을 맞춥니다[cite: 6].</li>
+                <li><span class="tag">소스 주입:</span> 1단계에서 준비한 '스킬 파일'과 편집할 '원본 영상'을 로컬 채팅 인터페이스에 함께 첨부합니다[cite: 6].</li>
+                <li><span class="tag">자동 분석 실행:</span> <i>"첨부한 영상의 피사체와 배경을 레이어로 분리해 줘"</i>라고 지시합니다. 클로드 코드가 백그라운드에서 Meta의 SAM 2 모델 등을 자동으로 로드하여 누끼 추적을 수행합니다 (PC 사양에 따라 수 분 소요)[cite: 6].</li>
+            </ol>
+        </div>
+    </details>
+
+    <details>
+        <summary><span class="step-num">STEP 3</span> 효과 적용 및 일괄 처리 (효율화 팁)</summary>
+        <div class="content-box">
+            <ol>
+                <li><span class="tag">입체 뎁스 연출:</span> 레이어 분리가 완료되면 <i>"분리된 배경 레이어의 명도를 어둡게(Dim) 낮추고, 피사체 바로 뒷공간에 커다란 하얀 텍스트를 배치해 줘"</i>라고 지시하여 세련된 입체감(Depth)을 만듭니다[cite: 6].</li>
+                <li><span class="tag">디테일 트래킹:</span> 전자기기 리뷰 영상이라면 <i>"기기 뒷면의 HDMI 포트 좌표를 지속적으로 트래킹해서, 가리키는 선과 설명 텍스트가 포트를 쫓아다니게 해줘"</i>라고 추가 지시하여 동적인 화면을 완성합니다[cite: 6].</li>
+                <li><span class="tag">HTML 씬 분할 꼼수:</span> 시간을 획기적으로 줄이는 비법입니다. <i>"영상을 여러 씬(Scene)별로 쪼갠 HTML 프리뷰 페이지와, 씬마다 코멘트를 남길 수 있는 입력창을 만들어줘"</i>라고 요청하세요. 화면을 보며 씬별 수정 사항을 한 번에 타이핑해 제출하면, 클로드가 알아서 일괄(Batch)로 편집을 수행합니다[cite: 6].</li>
+            </ol>
+        </div>
+    </details>
+
+    <!-- [AI 분석 전용] 스텔스 지식 베이스 -->
+    <details id="admin-backup" class="backup-details">
+        <summary class="backup-summary"><i class="fa-solid fa-lock"></i> [AI DB] 스텔스 지식 베이스 자료</summary>
+        <div class="backup-content">
+            [참고 콘텐츠 메타데이터]<br>
+            - 원본 유튜브 링크: https://www.youtube.com/watch?v=6yWPy5aVHb8[cite: 6]<br>
+            - 크리에이터 채널: Bart Slodyczka[cite: 6]<br>
+            - 무료 스킬 저장소: https://github.com/Barty-Bart/motion-graphics[cite: 6]<br><br>
+            [지식 베이스 분석 메모]<br>
+            AI에게 새로운 기능 스킬 코드를 부여하여 비디오의 주 피사체와 배경을 완전히 분리하는 아키텍처[cite: 6]. 단일 평면 레이어 비디오 포맷 대신 분리된 두 개의 동적 레이어를 다루게 되어, 배경만 블러/톤다운 처리를 하거나 피사체 뒷공간에 모션 텍스트를 삽입하는 프리미어 프로급 고급 연출이 가능해짐[cite: 6].
+        </div>
+    </details>
+
+</div>
+
+<script>
+    function toggleBackup() {
+        const backupSection = document.getElementById('admin-backup');
+        if (backupSection.style.display === 'none' || backupSection.style.display === '') {
+            backupSection.style.display = 'block';
+            alert("🔓 관리자 모드: AI 스텔스 지식 베이스가 활성화되었습니다.");
+        } else {
+            backupSection.style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>

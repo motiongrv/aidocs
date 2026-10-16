@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전통적 편집의 종말: Claude 에이전트 기반 'Agent Edits' 영상 편집 하니스 가이드</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    
+    <style>
+        :root { --bg-color: #0f1115; --card-bg: #1a1d24; --text-main: #e2e8f0; --text-sub: #94a3b8; --accent: #6366f1; --success: #10b981; --step-color: #f59e0b; --border-color: #2d3748; }
+        body { font-family: 'Pretendard', sans-serif; line-height: 1.5; color: var(--text-main); background-color: var(--bg-color); margin: 0; padding: 40px 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 40px; padding-bottom: 30px; border-bottom: 1px solid var(--border-color); }
+        .badge { background: rgba(99, 102, 241, 0.1); color: #818cf8; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; display: inline-block; margin-bottom: 15px; border: 1px solid rgba(99, 102, 241, 0.2); user-select: none; cursor: pointer; }
+        h1 { font-size: 30px; font-weight: 800; margin: 0 0 15px 0; letter-spacing: -0.5px; color: #fff; }
+        .source-link { color: var(--text-sub); font-size: 14px; margin-top: 10px; }
+        .visual-summary { display: flex; gap: 15px; margin-bottom: 30px; }
+        .visual-card { flex: 1; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; text-align: center; }
+        .visual-card i { font-size: 28px; color: var(--accent); margin-bottom: 12px; }
+        .visual-card h3 { margin: 0 0 8px 0; font-size: 15px; color: #fff; }
+        .visual-card p { margin: 0; font-size: 13px; color: var(--text-sub); word-break: keep-all; }
+        details { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 15px; overflow: hidden; }
+        details[open] { border-color: var(--step-color); box-shadow: 0 0 0 1px var(--step-color); }
+        summary { padding: 18px 20px; font-size: 16px; font-weight: 600; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; color: #fff; }
+        summary::-webkit-details-marker { display: none; }
+        summary:after { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--text-sub); transition: transform 0.2s; }
+        details[open] summary:after { transform: rotate(180deg); color: var(--step-color); }
+        .step-num { display: inline-block; background: var(--step-color); color: #fff; border-radius: 6px; padding: 2px 8px; font-size: 14px; margin-right: 8px; }
+        .content-box { padding: 0 20px 20px 20px; border-top: 1px solid var(--border-color); margin-top: 5px; padding-top: 20px; }
+        .highlight-box { background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success); padding: 12px 15px; border-radius: 0 8px 8px 0; margin-bottom: 20px; font-size: 14px; font-weight: 600; color: var(--success); }
+        ol, ul { padding-left: 20px; margin: 0; }
+        li { margin-bottom: 16px; font-size: 14px; color: var(--text-main); line-height: 1.5; padding-left: 5px; }
+        ol li::marker { font-weight: 800; color: var(--step-color); }
+        ul { list-style: none; }
+        ul li { position: relative; padding-left: 24px; }
+        ul li::before { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; left: 0; top: 1px; color: var(--accent); font-size: 13px; }
+        li span.tag { color: #fff; font-weight: 600; margin-right: 6px; }
+        .prompt-box { background: #0b0c10; border: 1px solid #374151; padding: 15px; border-radius: 8px; font-size: 13px; color: #818cf8; margin-top: 10px; font-family: monospace; line-height: 1.6; }
+        #admin-backup { display: none; margin-top: 40px; border-color: #ef4444; }
+        .backup-summary { color: #fca5a5; font-size: 15px; }
+        .backup-content { background: #0b0c10; color: #64748b; font-size: 13px; font-family: monospace; max-height: 250px; overflow-y: auto; padding: 20px; border-top: 1px solid #ef4444; }
+        @media (max-width: 600px) { .visual-summary { flex-direction: column; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <!-- 🧭 대문으로 돌아가기 상단 네비게이션 바 -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+            <a href="index.html" style="color: var(--text-sub); text-decoration: none; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: color 0.2s;">
+                <i class="fa-solid fa-arrow-left"></i> 대문으로 돌아가기
+            </a>
+            <div class="badge" ondblclick="toggleBackup()" style="margin-bottom: 0;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> AI & AUTOMATION
+            </div>
+        </div>
+        <h1>전통적 편집의 종말: Claude 에이전트 기반 'Agent Edits' 영상 편집 하니스</h1>
+        <div class="source-link">
+            <i class="fa-solid fa-book-open"></i> 자체 검증 실전 노하우 아카이브
+        </div>
+    </header>
+
+    <div class="visual-summary">
+        <div class="visual-card">
+            <i class="fa-solid fa-timeline"></i>
+            <h3>타임라인 편집의 종말</h3>
+            <p>프리미어처럼 일일이 타임라인을 클릭하는 방식 대신, 원본 영상을 던지면 AI 에이전트가 한 번에 완성합니다.</p>
+        </div>
+        <div class="visual-card">
+            <i class="fa-solid fa-robot"></i>
+            <h3>에이전틱 하니스 구조</h3>
+            <p>로컬 Whisper 자막 추출과 OpenCV 비전 분석, 그리고 QA 에이전트의 품질 검수까지 자동화됩니다.</p>
+        </div>
+        <div class="visual-card">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <h3>역공학(Reverse Engineer)</h3>
+            <p>인터넷의 유명 유튜버 편집 스타일을 스킬로 역설계하여 나만의 커스텀 파이프라인으로 구축합니다.</p>
+        </div>
+    </div>
+
+    <details open>
+        <summary><span class="step-num">STEP 1</span> 'Agent Edits' 하니스의 작동 원리 및 파이프라인</summary>
+        <div class="content-box">
+            <div class="highlight-box">
+                <i class="fa-solid fa-lightbulb"></i> 핵심 철학: 이제 영상을 만드는 방식은 코딩하는 방식('Vibe Coding')과 정확히 일치합니다. 에이전트와 대화를 주고받으며 원하는 컷 스타일을 다듬어 나갑니다.
+            </div>
+            <ol>
+                <li><span class="tag">파일 제출:</span> unedited 원본 영상을 드롭하면 에이전트가 작업을 시작합니다.</li>
+                <li><span class="tag">음성 전사 (Whisper):</span> 오픈소스 로컬 Whisper 모델을 통해 단어 단위 타임스탬프를 추출하여 자막, 비트, 카운터 싱크를 완벽히 일치시킵니다.</li>
+                <li><span class="tag">비전 분석 (OpenCV):</span> 비전 모델이 얼굴을 크롭하고 밴드룸을 형성하여 본격적인 컷 편집 무대를 세팅합니다.</li>
+                <li><span class="tag">QA 검수 에이전트:</span> 렌더링(render.py) 직후 품질 검수 에이전트가 완성된 영상을 시청하고 이상 유무를 최종 확인합니다.</li>
+            </ol>
+        </div>
+    </details>
+
+    <details>
+        <summary><span class="step-num">STEP 2</span> 기본 제공되는 6가지 핵심 스킬 활용법</summary>
+        <div class="content-box">
+            <ul>
+                <li><span class="tag">1 & 2. 숏폼 / 롱폼 토킹 헤드:</span> 편집되지 않은 원본에 추가 노트만 적어 넘기면 숏폼과 롱폼 스타일로 알아서 재탄생합니다.</li>
+                <li><span class="tag">3. 리버스 엔지니어 (Reverse Engineer):</span> 유튜브에서 본 마음에 드는 편집 스타일을 에이전트에 학습시켜 그대로 구현하는 스킬입니다.</li>
+                <li><span class="tag">4. MarkX Pi 파일 (캐릭터 애니메이션):</span> 로고, 마스코트, 아이콘 파일을 주입해 에이전트가 코드로 애니메이션화하여 화면에 뛰어놀게 만드는 커스텀 해킹 툴입니다.</li>
+                <li><span class="tag">5. Giphy API 연동:</span> 대화 맥락에 맞는 밈(GIF)을 무료 API로 자동 호출하여 리액션 컷으로 삽입합니다.</li>
+                <li><span class="tag">6. 대화형 반복 수정:</span> 마음에 안 들 때마다 에이전트와 채팅으로 피드백을 주고받으면 에이전트가 기억하고 다음 렌더링에 즉시 반영합니다.</li>
+            </ul>
+        </div>
+    </details>
+
+    <details>
+        <summary><span class="step-num">STEP 3</span> 실전 도입 및 브랜드 아이덴티티 주입 팁</summary>
+        <div class="content-box">
+            <ol>
+                <li><span class="tag">커스텀 파이프라인 구축:</span> 기본 제공 스킬에 그치지 않고, 반복되는 나만의 연출 패턴을 새로운 스킬 파일로 저장해 두면 채널 성장에 따라 편집 에이전트가 더 정교해집니다.</li>
+                <li><span class="tag">브랜드 자산 활용:</span> 컬러, 타이포그래피, 브랜드 로고를 MarkX 파일을 통해 사전 학습시켜 두면 모든 영상에 일관된 아이덴티티가 자동으로 녹아듭니다.</li>
+            </ol>
+            <div class="prompt-box">
+                [생산성 인사이트]<br>
+                반복적인 타임라인 클릭 노동에서 완전히 해방되어, 오직 에이전트와의 크리에이티브한 기획 대화에만 집중할 수 있는 새로운 시대의 편집 패러다임입니다.
+            </div>
+        </div>
+    </details>
+
+    <!-- [AI 분석 전용] 스텔스 지식 베이스 -->
+    <details id="admin-backup" class="backup-details">
+        <summary class="backup-summary"><i class="fa-solid fa-lock"></i> [AI DB] 스텔스 지식 베이스 자료</summary>
+        <div class="backup-content">
+            [참고 콘텐츠 메타데이터]<br>
+            - 원본 유튜브 링크: https://www.youtube.com/watch?v=-QBJH_PK3pY[cite: 4]<br>
+            - 채널명: Kev Builds Apps[cite: 4]<br>
+            - 영상 제목: NEW Claude Video Editor Harness is INSANE + 6 Free Skills[cite: 4]<br><br>
+            [지식 베이스 분석 메모]<br>
+            전통적인 타임라인 편집(Premiere Pro, CapCut 등)의 종말을 선언하고, 클로드 에이전트를 활용한 오픈소스 영상 편집 하니스 'Agent Edits' 구조 분석. Whisper 로컬 모델을 통한 단어 단위 타임스탬프 싱크, OpenCV 기반 비전 얼굴 크롭, render.py 및 QA 에이전트 검수 파이프라인 포함. 특히 6가지 핵심 스킬(숏/롱폼 토킹헤드, 다른 유튜버 스타일을 복제하는 Reverse Engineer, 브랜드 로고/마스코트를 애니메이션화하는 MarkX Pi 파일, Giphy API 밈 자동 연동, 대화형 피드백 루프)을 통해 무한 확장 가능한 커스텀 편집 에이전트 구축 가이드[cite: 4].
+        </div>
+    </details>
+
+</div>
+
+<script>
+    function toggleBackup() {
+        const backupSection = document.getElementById('admin-backup');
+        if (backupSection.style.display === 'none' || backupSection.style.display === '') {
+            backupSection.style.display = 'block';
+            alert("🔓 관리자 모드: AI 스텔스 지식 베이스가 활성화되었습니다.");
+        } else {
+            backupSection.style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>
