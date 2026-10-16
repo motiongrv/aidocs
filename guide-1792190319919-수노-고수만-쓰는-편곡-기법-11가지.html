@@ -1,0 +1,494 @@
+<!-- GUIDE HTML START -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>수노(Suno AI) 고수 편곡 기법 11선 마스터 가이드</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --card-bg: #171b22;
+      --card-border: #28303f;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      --code-bg: #0b0d11;
+      --highlight: #38bdf8;
+      --tag-bg: #1e293b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+      line-height: 1.7;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    header {
+      margin-bottom: 2.5rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 1.5rem;
+    }
+    .badge {
+      display: inline-block;
+      background: var(--tag-bg);
+      color: var(--highlight);
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.825rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      border: 1px solid #334155;
+    }
+    h1 { font-size: 2.1rem; line-height: 1.3; margin-bottom: 0.75rem; color: #f8fafc; }
+    .source-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+    .source-link:hover { text-decoration: underline; color: #818cf8; }
+
+    /* PPT Carousel Section (CSS-only) */
+    .slider-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--highlight);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .carousel-container {
+      position: relative;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 3rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+    .carousel-track {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: thin;
+      scrollbar-color: var(--card-border) transparent;
+      padding: 1.5rem;
+      gap: 1.5rem;
+    }
+    .carousel-track::-webkit-scrollbar { height: 6px; }
+    .carousel-track::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 4px; }
+    .slide-card {
+      flex: 0 0 85%;
+      scroll-snap-align: center;
+      background: #11141b;
+      border: 1px solid #232a36;
+      border-radius: 8px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    @media (min-width: 768px) {
+      .slide-card { flex: 0 0 450px; }
+    }
+    .slide-num {
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .slide-heading {
+      font-size: 1.2rem;
+      color: #f1f5f9;
+      margin-bottom: 0.75rem;
+      font-weight: 700;
+    }
+    .slide-desc {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+    .slide-prompt-box {
+      background: var(--code-bg);
+      border: 1px solid #1e2530;
+      border-radius: 6px;
+      padding: 0.8rem;
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: #38bdf8;
+    }
+
+    /* Details Accordions */
+    .section-title {
+      font-size: 1.5rem;
+      margin-bottom: 1.25rem;
+      color: #f8fafc;
+      border-left: 4px solid var(--accent);
+      padding-left: 0.75rem;
+    }
+    details {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      margin-bottom: 1.2rem;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+    details[open] { border-color: #3f4a5c; }
+    summary {
+      padding: 1.1rem 1.4rem;
+      font-weight: 600;
+      font-size: 1.05rem;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #151921;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after {
+      content: '+';
+      font-size: 1.4rem;
+      color: var(--accent);
+      transition: transform 0.2s;
+    }
+    details[open] summary::after {
+      content: '−';
+    }
+    .details-content {
+      padding: 1.4rem;
+      border-top: 1px solid var(--card-border);
+      font-size: 0.95rem;
+      color: #cbd5e1;
+    }
+    .details-content p { margin-bottom: 1rem; }
+    .details-content ul {
+      margin-bottom: 1rem;
+      padding-left: 1.25rem;
+    }
+    .details-content li { margin-bottom: 0.4rem; }
+    pre {
+      background: var(--code-bg);
+      border: 1px solid #242c3b;
+      border-radius: 6px;
+      padding: 1rem;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.88rem;
+      color: #7dd3fc;
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+    .callout {
+      background: rgba(99, 102, 241, 0.1);
+      border-left: 3px solid var(--accent);
+      padding: 0.85rem 1rem;
+      border-radius: 0 6px 6px 0;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+    }
+
+    /* Database Table */
+    .db-section { margin-top: 3.5rem; }
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: var(--card-bg);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+    th {
+      background: #11141b;
+      color: var(--highlight);
+      font-weight: 600;
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--card-border);
+      white-space: nowrap;
+    }
+    td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid #1e2430;
+      color: var(--text-muted);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #1a1f29; color: var(--text-main); }
+    .code-tag {
+      font-family: monospace;
+      background: #0b0d11;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      color: #38bdf8;
+      border: 1px solid #1e2530;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="badge">Suno AI Audio Engineering</div>
+    <h1>수노 고수만 쓰는 편곡 기법 11선 완벽 해부</h1>
+    <a href="https://www.youtube.com/watch?v=dzQhazFrfqY" target="_blank" class="source-link">
+      <span>▶ 원본 영상: 수노롭게 | AI 음악 만들기 시청하기</span>
+    </a>
+  </header>
+
+  <!-- Horizontal Slide Desk Preview (Interactive PPT Carousel) -->
+  <div class="slider-title">
+    <span>📑 핵심 편곡 슬라이드 덱 (가로 스크롤)</span>
+  </div>
+  <div class="carousel-container">
+    <div class="carousel-track">
+      <div class="slide-card">
+        <div>
+          <div class="slide-num">SLIDE 01</div>
+          <div class="slide-heading">대괄호 vs 스타일 칸 원칙</div>
+          <p class="slide-desc">가사 칸의 대괄호 [Tag]는 '시점별 구조적 지시', 스타일 칸(Style of Music)의 쉼표 나열은 '전역적 음색 질감'을 결정합니다. 자리를 혼동하면 인공지능이 엉뚱하게 해석합니다.</p>
+        </div>
+        <div class="slide-prompt-box">가사창: [Cold Open] / [Instrumental Break]<br>스타일창: Lo-fi, Vinyl Crackle, Scratch</div>
+      </div>
+
+      <div class="slide-card">
+        <div>
+          <div class="slide-num">SLIDE 02</div>
+          <div class="slide-heading">Cold Open (0초 즉각 진입)</div>
+          <p class="slide-desc">긴 무보컬 인트로를 삭제하고 0초부터 보컬을 내리꽂는 테크닉. 쇼츠, 릴스 등 초반 3초 이탈률 방어가 절대적으로 중요한 플랫폼용 음원에 필수적입니다.</p>
+        </div>
+        <div class="slide-prompt-box">[Cold Open]<br>문을 닫고 나서야 알았어</div>
+      </div>
+
+      <div class="slide-card">
+        <div>
+          <div class="slide-num">SLIDE 03</div>
+          <div class="slide-heading">Spoken → Instrument Break</div>
+          <p class="slide-desc">보컬 대사 뒤에 악기가 '대답'하는 여백(Call and Response)을 구축합니다. 대사 직후 [No Vocals]와 연주 악기를 병기하여 재즈/발라드의 극적 여운을 연출합니다.</p>
+        </div>
+        <div class="slide-prompt-box">[Spoken Word]<br>너의 숨소리...<br>[Instrumental Break, Saxophone Solo, No Vocals]</div>
+      </div>
+
+      <div class="slide-card">
+        <div>
+          <div class="slide-num">SLIDE 04</div>
+          <div class="slide-heading">Build-up & Drop 격리 지정</div>
+          <p class="slide-desc">전자음악과 팝에서 곡이 밋밋하게 흘러가는 참사를 방지합니다. 긴장이 올라가는 빌드업과 폭발하는 드롭 구간을 반드시 두 개의 섹션 태그로 분리 설계합니다.</p>
+        </div>
+        <div class="slide-prompt-box">[Build-up, Rising Tension, Snare Riser]<br>셋, 둘, 하나...<br>[Drop, Full Beat, Deep Sub-bass]</div>
+      </div>
+
+      <div class="slide-card">
+        <div>
+          <div class="slide-num">SLIDE 05</div>
+          <div class="slide-heading">Ascending Pitch Climax</div>
+          <p class="slide-desc">솔로 연주나 클라이맥스로 진입할 때 매 마디마다 음을 한 칸씩 높이도록 지시합니다. 듣는 이의 기대감과 텐션을 극한으로 끌어올리는 장치입니다.</p>
+        </div>
+        <div class="slide-prompt-box">[Instrumental Solo, Ascending Arpeggio, Rises Higher Every Bar, No Vocals]</div>
+      </div>
+
+      <div class="slide-card">
+        <div>
+          <div class="slide-num">SLIDE 06</div>
+          <div class="slide-heading">Clean Outro & Fade Control</div>
+          <p class="slide-desc">수노가 마지막 마디에서 이상한 환청 가사를 읊조리거나 뚝 끊기는 에러를 차단합니다. 부드러운 페이드아웃과 무보컬 조건을 조합해 곱게 퇴장시킵니다.</p>
+        </div>
+        <div class="slide-prompt-box">[Outro, Slow Fade Out, Smooth Ending, No Vocals]</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deep Dive Technical Sections -->
+  <h2 class="section-title">편곡 지시 완전 정복: 심층 마스터 가이드</h2>
+
+  <details open>
+    <summary>1. 편곡 설계의 대원칙: 대괄호 vs 스타일 칸 격리</summary>
+    <div class="details-content">
+      <p>대부분의 수노 이용자들이 겪는 가장 큰 실수는 <strong>“원하는 효과를 스타일 칸에 쓸지, 가사 창의 대괄호에 넣을지 구분하지 못하는 것”</strong>입니다.</p>
+      <ul>
+        <li><strong>가사 입력창의 대괄호 <code>[...]</code>:</strong> 시간 축에 따른 특정 '시점(Timeline/Structure)'을 지시합니다. 예: "여기서 드롭 발생", "여기서 악기 솔로 진행", "여기서 보컬 멈춤".</li>
+        <li><strong>스타일 칸(Style of Music):</strong> 곡 전체의 음색, 장르적 질감, 믹싱 톤 등 전역적(Global) 분위기를 쉼표로 연결합니다.</li>
+      </ul>
+      <div class="callout">
+        <strong>AHA Moment:</strong> 글리치(Glitch) 효과를 곡 전체에 주고 싶지 않고 프리코러스 전환부에만 주고 싶다면 스타일 칸에 넣으면 안 됩니다. 스타일 칸에 넣으면 첫 마디부터 지직거리는 노이즈가 난무합니다. 오직 가사창의 전환부에만 <code>[Pre-Chorus, Glitch Transition]</code>으로 국소 지정해야 합니다.
+      </div>
+    </div>
+  </details>
+
+  <details>
+    <summary>2. 오프닝 테크닉: Cold Open vs 라이브 콘서트 현장감</summary>
+    <div class="details-content">
+      <p>곡의 첫인상을 결정짓는 두 가지 극단적인 인트로 설계법입니다.</p>
+      <p><strong>① Cold Open (0초 즉시 시작)</strong><br>
+      수노는 기본적으로 약 5~15초간의 무보컬 인트로 연주를 생성하려는 성향이 있습니다. 가사 창 맨 첫 줄에 아래와 같이 지시하면 첫 박자부터 보컬이 터져 나옵니다.</p>
+      <pre>[Cold Open]
+문을 닫고 나서야 알았어</pre>
+      
+      <p><strong>② 라이브 콘서트 인트로 (현장감 극대화)</strong><br>
+      앨범 라이브 트랙이나 거대한 아레나의 스케일을 줄 때 활용합니다. 함성, 박수, 앰비언트 리버브를 인트로 태그 내부에 몰아넣습니다.</p>
+      <pre>[Live Concert Intro, Crowd Cheering, Applause, Stage Reverb]
+(환호성이 잦아들며 기타 리프 진입)
+불빛이 우리를 삼키기 전에</pre>
+    </div>
+  </details>
+
+  <details>
+    <summary>3. 다이내믹 & 감정 여백: Spoken Call & Response, Glitch, Ascending</summary>
+    <div class="details-content">
+      <p>단조로운 AI 생성곡의 흐름을 인간 프로듀서의 섬세한 터치처럼 바꾸는 3대 편곡 기술입니다.</p>
+      
+      <p><strong>① 대사 후 악기 응답 (Call & Response)</strong><br>
+      대사가 끝나고 악기가 독주할 수 있는 독립된 브레이크 섹션을 만들고 악기명과 <code>No Vocals</code>를 필수 기재합니다.</p>
+      <pre>[Spoken Word]
+너의 숨소리, 그거 하나뿐이었어.
+[Instrumental Break, Melancholic Saxophone Solo, No Vocals]</pre>
+
+      <p><strong>② 솔로 음계 점진적 상승 (Ascending Pitch)</strong><br>
+      기타나 신스 솔로가 진행될수록 옥타브를 올려 클라이맥스로 치닫게 만듭니다.</p>
+      <pre>[Guitar Solo, Ascending Arpeggio, Rises Higher Every Bar, No Vocals]</pre>
+
+      <p><strong>③ 국소 부위 글리치 (Digital Glitch)</strong><br>
+      벌스에서 코러스로 넘어갈 때 순간적인 지직거림을 주어 청각적 전환 충격을 유도합니다.</p>
+      <pre>[Transition, Digital Glitch, Stuttering Beat]</pre>
+    </div>
+  </details>
+
+  <details>
+    <summary>4. 템포 고정(BPM Lock) 및 무보컬 오케스트라 큐(Score Cues)</summary>
+    <div class="details-content">
+      <p>곡이 후반부로 가면서 템포가 멋대로 빨라지거나 처지는 현상을 완벽하게 방어하는 테크닉입니다.</p>
+      <div class="callout">
+        <strong>템포 고정 핵심:</strong> 스타일에 <code>90 BPM</code>을 적는 것만으로는 AI가 중간에 템포를 바꿀 확률이 높습니다. 가사 상단과 각 섹션 대괄호 안에 동일한 BPM과 무드 고정 키워드를 계속 명시하십시오.
+      </div>
+      <pre>[Structure: Steady 85 BPM, Consistent Tempo throughout]
+[Verse 1, 85 BPM, Downtempo R&B]
+잔이 비어도 자리는 그대로...
+[Chorus, 85 BPM, Strict Tempo, No Rush]</pre>
+
+      <p><strong>오케스트라/BGM 전용 인스트루멘탈 큐(Cues)</strong><br>
+      가사를 아예 쓰지 않는 모드에서 대괄호만으로 영화 트레일러 음악을 지휘합니다.</p>
+      <pre>[Intro: Soft Strings, Mysterious French Horn]
+[Build-up: Adding Heavy Timpani, Rising Brass Tension]
+[Climax: Full Epic Orchestral Blast, Massive Reverb Tail]
+[Ending: Sudden Brass Cut, Lingering Reverb]</pre>
+    </div>
+  </details>
+
+  <details>
+    <summary>5. 보컬 추임새(Ad-lib) 규칙 & 질감 팔레트 DJ Pack</summary>
+    <div class="details-content">
+      <p><strong>보컬 추임새(Ad-lib)의 대소문자 규칙</strong><br>
+      가사 중간에 "HEY", "BOOM", "YEAH" 같은 추임새를 넣을 때 소문자로 작성하면 수노가 정규 멜로디 가사로 발음해버립니다. <strong>반드시 괄호로 묶고 전체 대문자</strong>로 표기하십시오.</p>
+      <pre>심장이 먼저 뛰기 시작해 (BOOM!)
+하나, 둘, 셋 (HEY!)
+오늘 밤을 불태워</pre>
+
+      <p><strong>DJ Pack (스타일 칸에 넣는 음색 재료 팔레트)</strong><br>
+      대괄호가 아닌 스타일 칸(Style of Music)에 쉼표로 나열하여 곡 전체의 그런지함과 클럽 바이브를 부여하는 프롬프트 묶음입니다.</p>
+      <pre>Vinyl crackle, Turntable scratch, Club punchy kick, Deep 808 sub-bass, Robot vocoder, Hard stop ending</pre>
+    </div>
+  </details>
+
+  <!-- Comprehensive Stealth Database -->
+  <div class="db-section">
+    <h2 class="section-title">스텔스 데이터베이스: 11개 편곡 기법 총람</h2>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>기법 명칭</th>
+            <th>적용 위치</th>
+            <th>필수 프롬프트 문법</th>
+            <th>기대 효과 / 해결 문제</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>① Cold Open</strong></td>
+            <td>가사 최상단</td>
+            <td><span class="code-tag">[Cold Open]</span></td>
+            <td>도입부 10초 이탈 방지, 첫 박 보컬 즉시 진입</td>
+          </tr>
+          <tr>
+            <td><strong>② 라이브 Intro</strong></td>
+            <td>가사 인트로</td>
+            <td><span class="code-tag">[Live Concert Intro, Crowd Cheering, Stage Reverb]</span></td>
+            <td>실제 공연장 음장감, 도입부 에너지 극대화</td>
+          </tr>
+          <tr>
+            <td><strong>③ Spoken → Break</strong></td>
+            <td>가사 중간</td>
+            <td><span class="code-tag">[Spoken Word] ... [Instrumental Break, Sax Solo, No Vocals]</span></td>
+            <td>콜 앤 리스폰스 구조, 발라드/재즈 감정 여백 형성</td>
+          </tr>
+          <tr>
+            <td><strong>④ Build-up & Drop</strong></td>
+            <td>가사 드롭 전/후</td>
+            <td><span class="code-tag">[Build-up, Riser] ... [Drop, Full Beat, Deep Bass]</span></td>
+            <td>EDM/클럽 팝의 에너지 폭발점 정밀 제어</td>
+          </tr>
+          <tr>
+            <td><strong>⑤ 의도적 Glitch</strong></td>
+            <td>전환부 대괄호</td>
+            <td><span class="code-tag">[Transition, Digital Glitch, Stuttering]</span></td>
+            <td>국소 구간 전자 노이즈 충격감, 트랜지션 극대화</td>
+          </tr>
+          <tr>
+            <td><strong>⑥ Ascending Solo</strong></td>
+            <td>간주 대괄호</td>
+            <td><span class="code-tag">[Solo, Ascending Arpeggio, Rises Higher Every Bar, No Vocals]</span></td>
+            <td>솔로 연주 시 매 마디 고조감 누적</td>
+          </tr>
+          <tr>
+            <td><strong>⑦ Orchestra Cue</strong></td>
+            <td>가사창 전체 (가사없음)</td>
+            <td><span class="code-tag">[Intro: Strings] → [Build-up: Brass] → [Climax]</span></td>
+            <td>보컬 없는 예고편 및 영화 OST 풀 오케스트레이션</td>
+          </tr>
+          <tr>
+            <td><strong>⑧ Ending 통제</strong></td>
+            <td>가사 최하단</td>
+            <td><span class="code-tag">[Outro, Slow Fade Out, Smooth Ending, No Vocals]</span></td>
+            <td>마지막 마디 뚝 끊김 및 헛소리 보컬 완벽 차단</td>
+          </tr>
+          <tr>
+            <td><strong>⑨ BPM 고정</strong></td>
+            <td>스타일 & 가사 전반</td>
+            <td><span class="code-tag">[Steady XX BPM, Consistent Tempo throughout]</span></td>
+            <td>후반부 템포 이탈 및 제멋대로 빨라짐 방지</td>
+          </tr>
+          <tr>
+            <td><strong>⑩ Ad-lib 추임새</strong></td>
+            <td>가사 박자 사이</td>
+            <td><span class="code-tag">(대문자 표기: (HEY!), (BOOM!), (UH!))</span></td>
+            <td>가사로 오인 발음 차단, 드롭 전후 리듬감 부각</td>
+          </tr>
+          <tr>
+            <td><strong>⑪ DJ Pack Palette</strong></td>
+            <td>스타일 칸</td>
+            <td><span class="code-tag">Vinyl crackle, Turntable scratch, Punchy 808</span></td>
+            <td>아날로그 LP 질감 및 클럽 믹싱 톤 일괄 주입</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+<!-- GUIDE HTML END -->
