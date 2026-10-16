@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suno × Claude Code: 편집 프로그램 없이 타이포 뮤직비디오 만들기</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    
+    <style>
+        :root { --bg-color: #0f1115; --card-bg: #1a1d24; --text-main: #e2e8f0; --text-sub: #94a3b8; --accent: #6366f1; --success: #10b981; --step-color: #f59e0b; --border-color: #2d3748; }
+        body { font-family: 'Pretendard', sans-serif; line-height: 1.5; color: var(--text-main); background-color: var(--bg-color); margin: 0; padding: 40px 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 40px; padding-bottom: 30px; border-bottom: 1px solid var(--border-color); }
+        .badge { background: rgba(99, 102, 241, 0.1); color: #818cf8; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; display: inline-block; margin-bottom: 15px; border: 1px solid rgba(99, 102, 241, 0.2); user-select: none; cursor: pointer; }
+        h1 { font-size: 32px; font-weight: 800; margin: 0 0 15px 0; letter-spacing: -0.5px; color: #fff; }
+        .source-link { color: var(--text-sub); font-size: 14px; margin-top: 10px; }
+        .source-link a { color: #a5b4fc; text-decoration: none; font-weight: 600; }
+        .source-link a:hover { text-decoration: underline; }
+        
+        /* 📊 인터랙티브 PPT 슬라이드 덱 CSS */
+        .ppt-wrapper { margin: 40px 0; background: #000; padding: 20px; border-radius: 16px; border: 1px solid var(--accent); box-shadow: 0 10px 30px rgba(99, 102, 241, 0.15); position: relative; }
+        .ppt-header { display: flex; justify-content: space-between; color: var(--text-sub); font-size: 13px; margin-bottom: 15px; font-weight: 600; padding: 0 10px; }
+        
+        .ppt-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.5); color: white; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; z-index: 10; font-size: 18px; transition: all 0.2s; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .ppt-nav-btn:hover { background: var(--accent); box-shadow: 0 0 15px var(--accent); scale: 1.1; }
+        .ppt-prev { left: 30px; }
+        .ppt-next { right: 30px; }
+
+        .ppt-container { display: flex; overflow-x: auto; gap: 20px; padding-bottom: 10px; scroll-snap-type: x mandatory; scroll-behavior: smooth; cursor: pointer; }
+        .ppt-container::-webkit-scrollbar { display: none; }
+        
+        .slide { flex: 0 0 100%; height: 500px; background: linear-gradient(135deg, #1e1e2f 0%, #151522 100%); border-radius: 12px; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.05); position: relative; user-select: none; transition: background 0.3s; }
+        .slide:hover { background: linear-gradient(135deg, #25253a 0%, #1a1a2b 100%); }
+        .slide-num { position: absolute; top: 20px; left: 20px; font-size: 14px; font-weight: 800; color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); padding: 4px 12px; border-radius: 20px; }
+        
+        .slide-illustration { width: 110px; height: 110px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%); border: 2px solid rgba(255,255,255,0.1); border-radius: 28px; display: flex; justify-content: center; align-items: center; font-size: 46px; color: #fff; margin: 0 auto 30px auto; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3), inset 0 0 20px rgba(255,255,255,0.05); position: relative; transform: rotate(-3deg); transition: transform 0.4s ease; }
+        .slide:hover .slide-illustration { transform: rotate(3deg) scale(1.05); }
+        .icon-badge { position: absolute; bottom: -12px; right: -12px; background: var(--success); width: 42px; height: 42px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px; border: 3px solid #1a1a2b; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .icon-badge.purple { background: #c084fc; }
+        .icon-badge.orange { background: var(--step-color); }
+        .icon-badge.blue { background: #38bdf8; }
+        .icon-badge.red { background: #f43f5e; }
+        .icon-badge.green { background: #10b981; }
+
+        .slide h2 { color: #a5b4fc; font-size: 30px; margin: 0 0 20px 0; font-weight: 800; line-height: 1.3; }
+        .slide ul { text-align: left; margin-top: 20px; padding-left: 20px; }
+        .slide ul li { font-size: 16px; color: #e2e8f0; margin-bottom: 12px; line-height: 1.6; list-style-type: disc; }
+        .slide p { font-size: 16px; color: #cbd5e1; line-height: 1.6; margin: 0; word-break: keep-all; }
+        .slide .highlight { color: #34d399; font-weight: 700; }
+        .click-hint { position: absolute; bottom: 20px; font-size: 12px; color: rgba(255,255,255,0.2); font-weight: 600; letter-spacing: 1px; }
+
+        /* 본문 내용 상세 박스 */
+        details { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 15px; overflow: hidden; }
+        details[open] { border-color: var(--step-color); box-shadow: 0 0 0 1px var(--step-color); }
+        summary { padding: 20px; font-size: 17px; font-weight: 700; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; color: #fff; }
+        summary::-webkit-details-marker { display: none; }
+        summary:after { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--text-sub); transition: transform 0.2s; }
+        details[open] summary:after { transform: rotate(180deg); color: var(--step-color); }
+        .step-num { display: inline-block; background: var(--step-color); color: #fff; border-radius: 6px; padding: 4px 10px; font-size: 14px; margin-right: 12px; font-weight: 800; }
+        .content-box { padding: 0 25px 25px 25px; border-top: 1px solid var(--border-color); margin-top: 5px; padding-top: 25px; }
+        .highlight-box { background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success); padding: 15px; border-radius: 0 8px 8px 0; margin-bottom: 25px; font-size: 15px; font-weight: 600; color: var(--success); line-height: 1.5; }
+        .content-box ol, .content-box ul { padding-left: 20px; margin: 0; }
+        .content-box li { margin-bottom: 18px; font-size: 15px; color: var(--text-main); line-height: 1.6; padding-left: 5px; word-break: keep-all; }
+        .content-box ol li::marker { font-weight: 800; color: var(--step-color); font-size: 16px; }
+        .content-box ul { list-style: none; }
+        .content-box ul li { position: relative; padding-left: 24px; }
+        .content-box ul li::before { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; left: 0; top: 2px; color: var(--accent); font-size: 14px; }
+        li span.tag { color: #fff; font-weight: 700; margin-right: 8px; font-size: 16px; }
+        .prompt-box { background: #0b0c10; border: 1px solid #374151; padding: 20px; border-radius: 8px; font-size: 14px; color: #818cf8; margin-top: 15px; font-family: monospace; line-height: 1.6; }
+        #admin-backup { display: none; margin-top: 40px; border-color: #ef4444; }
+        .backup-summary { color: #fca5a5; font-size: 15px; }
+        .backup-content { background: #0b0c10; color: #64748b; font-size: 13px; font-family: monospace; max-height: 250px; overflow-y: auto; padding: 20px; border-top: 1px solid #ef4444; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+            <a href="index.html" style="color: var(--text-sub); text-decoration: none; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: color 0.2s;">
+                <i class="fa-solid fa-arrow-left"></i> 대문으로 돌아가기
+            </a>
+            <div class="badge" ondblclick="toggleBackup()" style="margin-bottom: 0;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> AI & AUTOMATION (DEEP-DIVE)
+            </div>
+        </div>
+        <h1>Suno × Claude Code: 편집 프로그램 없이 타이포 뮤직비디오 만들기</h1>
+        <div class="source-link">
+            <i class="fa-solid fa-book-open"></i> 분석 원본: <a href="https://www.youtube.com/watch?v=Rdc9nb7WHQo" target="_blank">수노롭게 - 편집 프로그램 한 번도 안 켜고 뮤직비디오 만들었습니다</a>
+        </div>
+    </header>
+
+    <!-- 📊 클릭 반응형 웹 내장 PPT 슬라이드 섹션 (10장) -->
+    <div class="ppt-wrapper">
+        <div class="ppt-header">
+            <span><i class="fa-solid fa-desktop"></i> Suno x Claude Code MV Automation</span>
+            <span>마우스 클릭 또는 화살표 버튼으로 넘겨보세요</span>
+        </div>
+        
+        <button class="ppt-nav-btn ppt-prev" onclick="moveSlide(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="ppt-nav-btn ppt-next" onclick="moveSlide(1)"><i class="fa-solid fa-chevron-right"></i></button>
+
+        <div class="ppt-container" id="ppt-container" onclick="moveSlide(1)">
+            <!-- Slide 1 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 01</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%); transform: rotate(-3deg);">
+                    <i class="fa-solid fa-guitar"></i>
+                    <div class="icon-badge blue"><i class="fa-solid fa-code"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>음악부터 영상까지 편집 툴 Zero</h2>
+                    <p>가사 타이밍(싱크)을 하나하나 맞추는 노가다는 끝났습니다.<br><strong>Suno</strong>로 만든 노래 한 곡을 <span class="highlight">Claude Code(데스크톱 앱)</span>에 통째로 먹여<br>키네틱 타이포그래피 모션그래픽 뮤직비디오를<br>자동으로 찍어내는 파이프라인입니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+            
+            <!-- Slide 2 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 02</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%); transform: rotate(3deg);">
+                    <i class="fa-solid fa-music"></i>
+                    <div class="icon-badge purple"><i class="fa-solid fa-1"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>Step 1. Suno 음악 및 메타데이터 준비</h2>
+                    <p>SunoProm 등 프롬프트 생성기를 활용해 곡을 만듭니다.<br><br>곡이 완성되면 단순히 MP3만 받는 것이 아니라,<br>크롬 확장 프로그램(Suno Lyric Download 등)을 이용해<br><span class="highlight">LRC 파일과 SRT 자막 파일</span>을 반드시 함께 다운로드합니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 3 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 03</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%); transform: rotate(-2deg);">
+                    <i class="fa-solid fa-terminal"></i>
+                    <div class="icon-badge orange"><i class="fa-solid fa-2"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>Step 2. Claude Code (데스크톱) 세팅</h2>
+                    <p>일반 웹브라우저 클로드가 아닙니다.<br><br>클로드 좌측 하단 프로필에서 <span class="highlight">데스크톱 앱(Claude Code)</span>을 다운받아 설치합니다.<br>앱 실행 후 '채팅'이 아닌 <strong>'코드(Code)' 모드</strong>를 선택하고,<br>노력 수준(Effort)을 '높음'으로 설정합니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 4 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 04</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(244, 63, 94, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%); transform: rotate(4deg);">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <div class="icon-badge red"><i class="fa-solid fa-check"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>폴더 지정 및 1차 프롬프팅</h2>
+                    <p>MP3, LRC, SRT 파일이 든 폴더를 클로드 앱에 지정합니다.<br><br><i>"폴더 안의 파일을 기준으로 역동적인 트렌디 모션그래픽 뮤비를 짜줘"</i><br>이 한 줄만 치면 클로드가 타임코드를 읽고 <span class="highlight">가사 싱크, 구간별 색감, 박자</span>가 완벽히 들어맞는 영상을 뱉어냅니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 5 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 05</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(56, 189, 248, 0.2) 100%); transform: rotate(-4deg);">
+                    <i class="fa-solid fa-face-frown"></i>
+                    <div class="icon-badge blue"><i class="fa-solid fa-bug"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>1차 결과의 한계: 'AI 특유의 냄새'</h2>
+                    <p>기본 텍스트 프롬프트만으로 뽑은 첫 결과물은<br>박자나 가사는 잘 맞지만, 디자인 퀄리티가 다소 심심하고<br><span class="highlight">AI가 대충 짜깁기한 느낌(AI Slop)</span>이 강하게 납니다.<br>이를 타파하기 위한 다음 스텝이 필요합니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 6 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 06</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(192, 132, 252, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%); transform: rotate(2deg);">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i>
+                    <div class="icon-badge purple"><i class="fa-solid fa-3"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>Step 3. 레퍼런스 주입 (jasonzhu.ai)</h2>
+                    <p>클로드 기반 모션그래픽 1,000개가 넘게 모인<br><strong>jasonzhu.ai</strong> 라이브러리에서 마음에 드는 쇼릴(Showreel) 영상을 찾습니다.<br><br><span class="highlight">해당 레퍼런스의 링크</span>를 클로드에 붙여넣으며<br>"다소 AI스러우니 이 영상 느낌을 살려서 덮어씌워 봐"라고 지시합니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 7 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 07</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%); transform: rotate(-3deg);">
+                    <i class="fa-solid fa-bolt"></i>
+                    <div class="icon-badge blue"><i class="fa-solid fa-4"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>2차 결과: 디자인 퀄리티 수직 상승</h2>
+                    <p>레퍼런스 링크 단 하나를 던져줬을 뿐인데,<br>색감, 트랜지션, 텍스트가 튀어나오는 이징(Easing) 텐션이<br>순식간에 <span class="highlight">프로페셔널한 쇼릴(Showreel) 급</span>으로 업그레이드됩니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 8 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 08</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%); transform: rotate(3deg);">
+                    <i class="fa-solid fa-ghost"></i>
+                    <div class="icon-badge orange"><i class="fa-solid fa-5"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>응용: 캐릭터 레퍼런스 혼합</h2>
+                    <p>이번엔 선 그림(Line-art) 형태의 귀여운 캐릭터가 나오는 영상을 찾습니다.<br><br><i>"이 링크 느낌처럼, 우리 노래 무드와 어울리는 캐릭터(오브젝트)를 화면에 같이 구현해 줘"</i>라고 요청하면, 단순 타이포그래피에 그치지 않고 <span class="highlight">스토리텔링형 오브젝트 모션</span>까지 창조합니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 9 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 09</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(244, 63, 94, 0.2) 100%); transform: rotate(-2deg);">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <div class="icon-badge red"><i class="fa-solid fa-check-double"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>3단계 빌드업의 핵심 요약</h2>
+                    <p>1단계: <span class="highlight">데이터 주입 (MP3 + LRC/SRT)</span>을 통해 물리적인 가사 싱크를 100% 맞춤.<br>2단계: <span class="highlight">쇼릴 레퍼런스</span>를 주입해 촌스러운 AI 디자인 레이아웃을 교정.<br>3단계: <span class="highlight">캐릭터/오브젝트 레퍼런스</span>를 주입해 서사가 있는 뮤직비디오로 발전시킴.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 10 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 10</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%); transform: rotate(4deg);">
+                    <i class="fa-solid fa-stopwatch"></i>
+                    <div class="icon-badge green"><i class="fa-solid fa-heart"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>수작업 10시간 vs AI 1시간</h2>
+                    <p>에프터이펙트로 가사 한 줄씩 찍어내며 10시간 걸리던 작업을,<br>Claude Code 환경 내에서 프롬프트 3번만 치고 <span class="highlight">렌더링 대기 시간 포함 1~2시간 컷</span>으로 끝내는 획기적인 파이프라인입니다.<br>이제 음악을 만들었다면 두려움 없이 영상을 뽑으세요!</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📖 심화 텍스트 본문 섹션 -->
+    <details open>
+        <summary><i class="fa-solid fa-music step-num" style="padding:4px 8px;"></i> 1. 데이터 주입: MP3와 LRC/SRT 메타데이터 추출</summary>
+        <div class="content-box">
+            <div class="highlight-box">
+                <i class="fa-solid fa-lightbulb"></i> 핵심 원리: 영상을 만들 때 가장 끔찍한 작업인 '타임코드 깎기'를 AI에게 외주화하려면, 반드시 음원 파일과 함께 '시간 정보가 기록된 가사 파일'을 같이 던져주어야 합니다.
+            </div>
+            <ul>
+                <li><span class="tag">Suno 확장 프로그램 활용:</span> Suno 등에서 음악을 생성한 후 웹에서 단순히 MP3만 받으면 시간 메타데이터가 증발합니다. 크롬 스토어에서 <strong>'Suno Lyric Download'</strong> 같은 확장 프로그램을 설치하여, 곡 재생 시 <span class="highlight">LRC(타임코드가 포함된 가사) 파일과 SRT(자막) 파일</span>을 반드시 함께 다운로드해야 합니다.</li>
+            </ul>
+        </div>
+    </details>
+
+    <details>
+        <summary><i class="fa-solid fa-terminal step-num" style="padding:4px 8px;"></i> 2. Claude Code (데스크톱) 폴더 연동 세팅</summary>
+        <div class="content-box">
+            <ul>
+                <li><span class="tag">데스크톱 앱의 권한:</span> 일반 웹브라우저 클로드가 아닌 <strong>클로드 데스크톱 앱(Claude Code)</strong>을 설치해야 로컬 컴퓨터의 특정 폴더(MP3, LRC 파일이 담긴 폴더)를 직접 바라보고 연산할 수 있습니다.</li>
+                <li><span class="tag">코드 모드 & Effort 설정:</span> 앱 실행 후 상단 탭에서 '코드(Code)'를 선택하고 사고 수준(Effort)을 '높음'으로 올립니다. 그 후 <i>"이 폴더 안의 파일들을 읽고 역동적이고 트렌디한 뮤직비디오를 짜 줘"</i>라고 지시합니다. 클로드가 LRC 파일의 시간값을 읽어 0.1초 단위의 키네틱 타이포그래피 싱크를 스스로 맞춥니다.</li>
+            </ul>
+        </div>
+    </details>
+
+    <details>
+        <summary><i class="fa-solid fa-magnifying-glass-chart step-num" style="padding:4px 8px;"></i> 3. 레퍼런스의 마법: jasonzhu.ai 활용법</summary>
+        <div class="content-box">
+            <ul>
+                <li><span class="tag">1차 결과의 한계 (AI Slop):</span> 텍스트로만 '트렌디하게'라고 지시하면 가사 싱크는 맞지만, 레이아웃이나 모션의 텐션이 촌스러운 소위 'AI 느낌'이 강하게 납니다.</li>
+                <li><span class="tag">레퍼런스 링크 주입:</span> <a href="https://jasonzhu.ai/en/prompts/claude-opus-5-5" target="_blank" style="color:var(--accent);">jasonzhu.ai</a> 같은 모션그래픽 라이브러리 사이트에서 프로페셔널한 느낌의 쇼릴(Showreel) 영상을 찾습니다. <i>"다소 AI 느낌이 나니까, 이 링크(레퍼런스 영상 URL)의 세련된 텐션과 색감을 참고해서 다시 짜 봐"</i>라고 지시하면, 디자인 퀄리티가 수직 상승합니다.</li>
+            </ul>
+        </div>
+    </details>
+
+    <details>
+        <summary><i class="fa-solid fa-ghost step-num" style="padding:4px 8px;"></i> 4. 캐릭터 오브젝트 추가 및 최종 심화</summary>
+        <div class="content-box">
+            <ul>
+                <li><span class="tag">오브젝트 연출:</span> 텍스트(가사)만 튀어나오는 타이포그래피를 넘어 서사를 주고 싶다면, 선 그림(Line-art)이나 애니메이션 캐릭터가 들어간 레퍼런스를 찾습니다. <i>"이 영상처럼, 우리 노래 분위기와 어울리는 캐릭터/오브젝트를 배경에 깔아 줘"</i>라고 지시합니다.</li>
+                <li><span class="tag">3단계 빌드업 완성:</span> <strong>[데이터 주입(싱크) ➔ 쇼릴 레퍼런스(디자인) ➔ 캐릭터 레퍼런스(서사)]</strong> 의 3단계를 거치며, 수작업 시 에프터이펙트로 10시간 이상 걸릴 노가다를 단 1~2시간 만에 끝내는 완벽한 뮤직비디오 자동화 공정이 완성됩니다.</li>
+            </ul>
+            <div class="prompt-box">
+                [생산성 인사이트]<br>
+                결국 퀄리티를 가르는 것은 AI의 성능 자체가 아니라, AI가 정확한 타임라인을 이해할 수 있도록 'LRC/SRT 데이터'를 제공하는 치밀함과, 추상적인 텍스트 지시 대신 명확한 '시각적 레퍼런스 링크'를 주입하는 기획력에 달려 있습니다.
+            </div>
+        </div>
+    </details>
+
+    <!-- [AI 분석 전용] 스텔스 지식 베이스 -->
+    <details id="admin-backup" class="backup-details">
+        <summary class="backup-summary"><i class="fa-solid fa-lock"></i> [AI DB] 스텔스 지식 베이스 자료</summary>
+        <div class="backup-content">
+            [참고 콘텐츠 메타데이터]<br>
+            - 영상 제목: <a href="https://www.youtube.com/watch?v=Rdc9nb7WHQo" target="_blank">편집 프로그램 한 번도 안 켜고 뮤직비디오 만들었습니다 (수노 × 클로드 코드)</a><br>
+            - 채널명: 수노롭게 | AI 음악 만들기<br>
+            - 핵심 키워드: Suno, Claude Code 데스크톱 앱, LRC/SRT 추출, jasonzhu.ai, 3단계 프롬프팅 빌드업, 키네틱 타이포그래피<br><br>
+            [지식 베이스 분석 메모]<br>
+            에프터이펙트 없이 Suno로 만든 음악을 Claude Code(데스크톱 앱)로 코딩해 뮤직비디오를 만드는 파이프라인. 핵심은 Suno 곡 다운로드 시 'Suno Lyric Download' 확장 프로그램으로 타임코드가 담긴 LRC와 SRT 파일을 반드시 확보하는 것임. 클로드 앱의 '코드' 모드에서 폴더를 지정하고 "뮤직비디오 짜줘"하면 가사 싱크를 완벽히 매핑함. 이후 다소 촌스러운 AI 퀄리티를 타파하기 위해 jasonzhu.ai에서 고퀄리티 레퍼런스 링크를 주입하여 1차 교정하고, 선 그림 캐릭터 레퍼런스를 추가 주입하여 최종 완성하는 3단계 빌드업 방식을 소개함. 수작업 10시간 분량을 1~2시간 내로 단축시키는 극강의 생산성 팁.
+        </div>
+    </details>
+
+</div>
+
+<script>
+    function toggleBackup() {
+        const backupSection = document.getElementById('admin-backup');
+        if (backupSection.style.display === 'none' || backupSection.style.display === '') {
+            backupSection.style.display = 'block';
+            alert("🔓 관리자 모드: AI 스텔스 지식 베이스가 활성화되었습니다.");
+        } else {
+            backupSection.style.display = 'none';
+        }
+    }
+
+    function moveSlide(direction) {
+        const container = document.getElementById('ppt-container');
+        if (event && event.stopPropagation) event.stopPropagation();
+        const slideWidth = container.clientWidth;
+        container.scrollBy({ left: direction * slideWidth, behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>
