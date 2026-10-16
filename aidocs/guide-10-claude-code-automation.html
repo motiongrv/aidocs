@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VS Code 기반 클로드 코드(Claude Code) 자동화 심화 가이드</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    
+    <style>
+        :root { --bg-color: #0f1115; --card-bg: #1a1d24; --text-main: #e2e8f0; --text-sub: #94a3b8; --accent: #6366f1; --success: #10b981; --step-color: #f59e0b; --border-color: #2d3748; }
+        body { font-family: 'Pretendard', sans-serif; line-height: 1.5; color: var(--text-main); background-color: var(--bg-color); margin: 0; padding: 40px 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 40px; padding-bottom: 30px; border-bottom: 1px solid var(--border-color); }
+        .badge { background: rgba(99, 102, 241, 0.1); color: #818cf8; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; display: inline-block; margin-bottom: 15px; border: 1px solid rgba(99, 102, 241, 0.2); user-select: none; cursor: pointer; }
+        h1 { font-size: 32px; font-weight: 800; margin: 0 0 15px 0; letter-spacing: -0.5px; color: #fff; }
+        .source-link { color: var(--text-sub); font-size: 14px; margin-top: 10px; }
+        
+        /* 📊 인터랙티브 PPT 슬라이드 덱 CSS */
+        .ppt-wrapper { margin: 40px 0; background: #000; padding: 20px; border-radius: 16px; border: 1px solid var(--accent); box-shadow: 0 10px 30px rgba(99, 102, 241, 0.15); position: relative; }
+        .ppt-header { display: flex; justify-content: space-between; color: var(--text-sub); font-size: 13px; margin-bottom: 15px; font-weight: 600; padding: 0 10px; }
+        
+        /* 네비게이션 화살표 버튼 */
+        .ppt-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.5); color: white; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; z-index: 10; font-size: 18px; transition: all 0.2s; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .ppt-nav-btn:hover { background: var(--accent); box-shadow: 0 0 15px var(--accent); scale: 1.1; }
+        .ppt-prev { left: 30px; }
+        .ppt-next { right: 30px; }
+
+        .ppt-container { display: flex; overflow-x: auto; gap: 20px; padding-bottom: 10px; scroll-snap-type: x mandatory; scroll-behavior: smooth; cursor: pointer; }
+        .ppt-container::-webkit-scrollbar { display: none; }
+        
+        .slide { flex: 0 0 100%; height: 500px; background: linear-gradient(135deg, #1e1e2f 0%, #151522 100%); border-radius: 12px; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.05); position: relative; user-select: none; transition: background 0.3s; }
+        .slide:hover { background: linear-gradient(135deg, #25253a 0%, #1a1a2b 100%); }
+        .slide-num { position: absolute; top: 20px; left: 20px; font-size: 14px; font-weight: 800; color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); padding: 4px 12px; border-radius: 20px; }
+        
+        /* 🎨 일러스트레이션 아이콘 아트워크 */
+        .slide-illustration { width: 110px; height: 110px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%); border: 2px solid rgba(255,255,255,0.1); border-radius: 28px; display: flex; justify-content: center; align-items: center; font-size: 46px; color: #fff; margin: 0 auto 30px auto; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3), inset 0 0 20px rgba(255,255,255,0.05); position: relative; transform: rotate(-3deg); transition: transform 0.4s ease; }
+        .slide:hover .slide-illustration { transform: rotate(3deg) scale(1.05); }
+        .icon-badge { position: absolute; bottom: -12px; right: -12px; background: var(--success); width: 42px; height: 42px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px; border: 3px solid #1a1a2b; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .icon-badge.purple { background: #c084fc; }
+        .icon-badge.orange { background: var(--step-color); }
+        .icon-badge.blue { background: #38bdf8; }
+        .icon-badge.red { background: #f43f5e; }
+
+        .slide h2 { color: #a5b4fc; font-size: 32px; margin: 0 0 20px 0; font-weight: 800; line-height: 1.3; }
+        .slide ul { text-align: left; margin-top: 20px; padding-left: 20px; }
+        .slide ul li { font-size: 17px; color: #e2e8f0; margin-bottom: 12px; line-height: 1.6; list-style-type: disc; }
+        .slide p { font-size: 17px; color: #cbd5e1; line-height: 1.6; margin: 0; word-break: keep-all; }
+        .slide .highlight { color: #34d399; font-weight: 700; }
+        .click-hint { position: absolute; bottom: 20px; font-size: 12px; color: rgba(255,255,255,0.2); font-weight: 600; letter-spacing: 1px; }
+
+        /* 본문 내용 상세 박스 */
+        details { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 15px; overflow: hidden; }
+        details[open] { border-color: var(--step-color); box-shadow: 0 0 0 1px var(--step-color); }
+        summary { padding: 20px; font-size: 17px; font-weight: 700; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; color: #fff; }
+        summary::-webkit-details-marker { display: none; }
+        summary:after { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--text-sub); transition: transform 0.2s; }
+        details[open] summary:after { transform: rotate(180deg); color: var(--step-color); }
+        .step-num { display: inline-block; background: var(--step-color); color: #fff; border-radius: 6px; padding: 4px 10px; font-size: 14px; margin-right: 12px; font-weight: 800; }
+        .content-box { padding: 0 25px 25px 25px; border-top: 1px solid var(--border-color); margin-top: 5px; padding-top: 25px; }
+        .highlight-box { background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success); padding: 15px; border-radius: 0 8px 8px 0; margin-bottom: 25px; font-size: 15px; font-weight: 600; color: var(--success); line-height: 1.5; }
+        .content-box ol, .content-box ul { padding-left: 20px; margin: 0; }
+        .content-box li { margin-bottom: 18px; font-size: 15px; color: var(--text-main); line-height: 1.6; padding-left: 5px; word-break: keep-all; }
+        .content-box ol li::marker { font-weight: 800; color: var(--step-color); font-size: 16px; }
+        .content-box ul { list-style: none; }
+        .content-box ul li { position: relative; padding-left: 24px; }
+        .content-box ul li::before { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; left: 0; top: 2px; color: var(--accent); font-size: 14px; }
+        li span.tag { color: #fff; font-weight: 700; margin-right: 8px; font-size: 16px; }
+        .prompt-box { background: #0b0c10; border: 1px solid #374151; padding: 20px; border-radius: 8px; font-size: 14px; color: #818cf8; margin-top: 15px; font-family: monospace; line-height: 1.6; }
+        #admin-backup { display: none; margin-top: 40px; border-color: #ef4444; }
+        .backup-summary { color: #fca5a5; font-size: 15px; }
+        .backup-content { background: #0b0c10; color: #64748b; font-size: 13px; font-family: monospace; max-height: 250px; overflow-y: auto; padding: 20px; border-top: 1px solid #ef4444; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+            <a href="index.html" style="color: var(--text-sub); text-decoration: none; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: color 0.2s;">
+                <i class="fa-solid fa-arrow-left"></i> 대문으로 돌아가기
+            </a>
+            <div class="badge" ondblclick="toggleBackup()" style="margin-bottom: 0;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> AI & AUTOMATION (DEEP-DIVE)
+            </div>
+        </div>
+        <h1>VS Code 기반 클로드 코드(Claude Code) 자동화 마스터 가이드</h1>
+        <div class="source-link">
+            <i class="fa-solid fa-book-open"></i> 자체 검증 심화 파이프라인
+        </div>
+    </header>
+
+    <!-- 📊 클릭 반응형 웹 내장 PPT 슬라이드 섹션 (8장으로 확장) -->
+    <div class="ppt-wrapper">
+        <div class="ppt-header">
+            <span><i class="fa-solid fa-desktop"></i> Claude Code Automation Presentation</span>
+            <span>마우스 클릭 또는 화살표 버튼으로 넘겨보세요</span>
+        </div>
+        
+        <!-- 네비게이션 버튼 -->
+        <button class="ppt-nav-btn ppt-prev" onclick="moveSlide(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="ppt-nav-btn ppt-next" onclick="moveSlide(1)"><i class="fa-solid fa-chevron-right"></i></button>
+
+        <div class="ppt-container" id="ppt-container" onclick="moveSlide(1)">
+            <!-- Slide 1 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 01</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%); transform: rotate(-3deg);">
+                    <i class="fa-solid fa-terminal"></i>
+                    <div class="icon-badge blue"><i class="fa-solid fa-robot"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>채팅을 넘어 터미널로 진화하다</h2>
+                    <p>Claude Code는 웹 브라우저에서 말로 끝나는 AI가 아닙니다.<br>VS Code 터미널에서 <strong>내 컴퓨터 폴더에 직접 접근</strong>하여<br>파일을 만들고, 실행하고, 스스로 고치는 능동형 AI 비서입니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+            
+            <!-- Slide 2 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 02</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(244, 63, 94, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%); transform: rotate(3deg);">
+                    <i class="fa-solid fa-credit-card"></i>
+                    <div class="icon-badge red"><i class="fa-solid fa-check"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>필수 준비물 (Prerequisites)</h2>
+                    <p>이 강력한 에이전트를 고용하려면 자격 요건이 필요합니다.<br><br><span class="highlight">1. Claude Pro 또는 Max 요금제 구독</span><br><span class="highlight">2. VS Code (비주얼 스튜디오 코드) 설치</span><br>무료 버전 사용자에게는 아쉽게도 터미널 접근이 허용되지 않습니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 3 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 03</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(56, 189, 248, 0.2) 100%); transform: rotate(-2deg);">
+                    <i class="fa-solid fa-table-columns"></i>
+                    <div class="icon-badge"><i class="fa-solid fa-desktop"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>3분할 워크스페이스 세팅</h2>
+                    <ul>
+                        <li><span class="highlight">왼쪽 (사물함):</span> 프로젝트 파일과 폴더 구조 확인</li>
+                        <li><span class="highlight">중앙 (작업대):</span> 생성된 코드와 결과물 미리보기</li>
+                        <li><span class="highlight">오른쪽 (일터):</span> 코딩 없이 자연어로 지시하는 AI 패널</li>
+                    </ul>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 4 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 04</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%); transform: rotate(4deg);">
+                    <i class="fa-solid fa-sliders"></i>
+                    <div class="icon-badge orange"><i class="fa-solid fa-bolt"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>Edit 모드 vs Architect 모드</h2>
+                    <p><strong>Edit 모드:</strong> 파일을 수정하기 전 "바꿔도 될까요?" 묻는 보수적 모드<br><br><strong>Architect 모드:</strong> AI가 시스템 구조를 주도적으로 기획하고<br>거시적인 틀을 짜는 능동 모드</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 5 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 05</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(192, 132, 252, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%); transform: rotate(-4deg);">
+                    <i class="fa-solid fa-file-signature"></i>
+                    <div class="icon-badge purple"><i class="fa-solid fa-gavel"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>claude.md 헌법 제정</h2>
+                    <p>가장 중요한 <strong>신입사원 온보딩 매뉴얼</strong>입니다.<br><br>역할(Role), 업무 처리 순서(Workflow), 금지어, 말투 등<br>AI가 판단을 내릴 <span class="highlight">절대적인 기준점(프롬프트)</span>을 파일로 박아둡니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 6 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 06</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(244, 63, 94, 0.2) 100%); transform: rotate(2deg);">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <div class="icon-badge red"><i class="fa-solid fa-bug"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>무한 디버깅 핑퐁 (Ping-Pong)</h2>
+                    <p>개발 지식이 없어도 두려워할 필요 없습니다.<br>에러가 나면 <strong>에러 메시지를 복사해서 그대로</strong> 넘기세요.<br><br><span class="highlight">"이거 안 돼. 왜 안 돼? 다시 고쳐"</span><br>클로드가 원인을 분석하고 코드를 스스로 수정하여 재실행합니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 7 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 07</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%); transform: rotate(-3deg);">
+                    <i class="fa-solid fa-plug"></i>
+                    <div class="icon-badge blue"><i class="fa-solid fa-link"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>Play MCP를 통한 외부 세계 확장</h2>
+                    <p>컴퓨터 안의 폴더에만 머무르지 않습니다.<br><br><strong>카카오 Play MCP</strong> 플러그인을 연결하면<br>네이버 뉴스 크롤링부터 <span class="highlight">카카오톡 내 채팅방 전송</span>까지<br>외부 API와 완벽하게 상호작용합니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+
+            <!-- Slide 8 -->
+            <div class="slide">
+                <span class="slide-num">SLIDE 08</span>
+                <div class="slide-illustration" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%); transform: rotate(3deg);">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <div class="icon-badge"><i class="fa-solid fa-clock"></i></div>
+                </div>
+                <div class="slide-content">
+                    <h2>100% 무인 스케줄링의 완성</h2>
+                    <p>로컬 테스트가 끝난 코드를 <strong>GitHub Repository</strong>에 Push한 뒤, <br>클라우드 <strong>Routines 트리거</strong>를 연동합니다.<br><br>이제 노트북 전원을 끄고 여행을 가도 <span class="highlight">매일 아침 8시</span>에<br>알아서 돌아가는 무인 시스템이 완성되었습니다.</p>
+                </div>
+                <div class="click-hint">CLICK TO NEXT</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📖 심화 텍스트 본문 섹션 -->
+    <details open>
+        <summary><span class="step-num">STEP 1</span> 3분할 워크스페이스 세팅과 필수 요금제</summary>
+        <div class="content-box">
+            <div class="highlight-box">
+                <i class="fa-solid fa-lightbulb"></i> 중요: 이 파이프라인을 구축하려면 일반 무료 버전이 아닌 '클로드 프로(Claude Pro)' 이상의 요금제가 필수적으로 요구됩니다[cite: 10].
+            </div>
+            <ol>
+                <li><span class="tag">VS Code 통합 환경 구축:</span> 비주얼 스튜디오 코드(VS Code)를 설치하고, 왼쪽 확장(Extensions) 탭에서 'Claude Code'를 검색해 플러그인을 설치합니다[cite: 10]. 이후 계정을 로그인하여 로컬 권한을 연동합니다.</li>
+                <li><span class="tag">3구역 분할 이해:</span> 화면은 크게 세 영역으로 나뉩니다. 왼쪽은 프로젝트의 모든 파일과 폴더를 볼 수 있는 '사물함', 중앙은 파일 내용을 확인하는 '작업대', 오른쪽은 클로드와 대화하고 명령을 내리는 AI 패널인 '일터'입니다[cite: 10]. 코딩을 몰라도 우측 일터에서만 자연어로 지시하면 AI가 좌측과 중앙을 알아서 조작합니다.</li>
+                <li><span class="tag">독립 폴더 할당:</span> 바탕화면 등에 '콘텐츠 리포트' 같은 빈 폴더를 생성하고 VS Code에서 엽니다[cite: 10]. 다른 작업과 꼬이지 않도록 독립된 환경을 주는 것이 첫걸음입니다.</li>
+            </ol>
+        </div>
+    </details>
+
+    <details>
+        <summary><span class="step-num">STEP 2</span> 'claude.md' 헌법 제정과 권한 제어 (Edit vs Architect)</summary>
+        <div class="content-box">
+            <ol>
+                <li><span class="tag">모드 전환의 이해:</span> AI 패널 하단에는 작업 모드를 설정할 수 있습니다. 'Edit(크 에딧)' 모드는 클로드가 파일을 수정하기 전 <i>"혹시 이거 바꿔도 될까요?"</i>라며 매번 허락을 구하는 모드이며, 'Architect(아키텍트)' 모드는 구조적인 설계를 주도하는 모드입니다[cite: 10]. 초기 구축 시에는 모드를 적절히 변경하며 통제력을 갖춰야 합니다.</li>
+                <li><span class="tag">설계도 claude.md 작성:</span> AI는 명확한 매뉴얼이 없으면 우왕좌왕합니다[cite: 10]. 폴더에 `claude.md` 파일을 만들고, AI의 역할, 업무 처리 순서, 그리고 절대 쓰면 안 되는 금지어와 말투를 헌법처럼 박아두어야 흔들리지 않는 자동화가 작동합니다[cite: 10].</li>
+            </ol>
+        </div>
+    </details>
+
+    <details>
+        <summary><span class="step-num">STEP 3</span> Play MCP 및 외부 API 연동 디버깅</summary>
+        <div class="content-box">
+            <ol>
+                <li><span class="tag">Play MCP 장착:</span> 로컬 컴퓨터 안의 데이터만 다루는 것을 넘어, 외부 세계와 소통하기 위해 MCP(Model Context Protocol)를 활용합니다[cite: 10]. 카카오에서 만든 'Play MCP'를 연동하면 네이버 뉴스 검색, 유튜브 트렌드 데이터, 카카오톡 '나와의 채팅방(나채방)' 전송 기능을 AI가 끌어다 쓸 수 있습니다[cite: 10].</li>
+                <li><span class="tag">자기 수정 루프 (Ping-Pong):</span> API 키를 연동하고 실행할 때 에러가 나면 사람이 고치지 않습니다[cite: 10]. 에러 메시지를 그대로 복사해 클로드에게 <i>"이거 안 돼. 왜 안 돼? 다시 고쳐"</i>라고 지시하면 코드를 스스로 수정하고 재실행합니다[cite: 10]. 이 디버깅 루프를 작동할 때까지 3~4번 반복하는 것이 핵심입니다.</li>
+            </ol>
+        </div>
+    </details>
+
+    <details>
+        <summary><span class="step-num">STEP 4</span> 무인 자동화 구축: GitHub & Routines</summary>
+        <div class="content-box">
+            <ol>
+                <li><span class="tag">GitHub 푸시:</span> 컴퓨터 폴더 내에서 완벽하게 작동하는 코드를 완성했다면, 이를 GitHub Repository(원격 저장소)에 Push합니다[cite: 10]. '솔로 데일리 브리핑'과 같이 이름을 짓고 `prompt.md` 파일 등을 업로드합니다[cite: 10].</li>
+                <li><span class="tag">클라우드 스케줄링:</span> 로컬 환경의 단점(컴퓨터를 꺼두면 작동 안 함)을 극복하기 위해 클라우드 스케줄러(Routines 등)를 세팅합니다. <i>"매일 아침 8시에 이 레포지토리를 클론하고 prompt.md대로 실행해"</i>라고 트리거를 겁니다[cite: 10].</li>
+                <li><span class="tag">시간의 환수:</span> 이제 노트북 전원을 끄고 여행을 가도, 매일 8시가 되면 AI가 뉴스를 긁어 트렌드를 분석하고 카카오톡으로 10개의 브리핑 리포트를 쏴줍니다[cite: 10]. 수동 반복 업무를 AI에게 던지고, 남은 시간은 진짜 낭만적이고 창조적인 '인간만의 일'에 투자하세요[cite: 10].</li>
+            </ol>
+            <div class="prompt-box">
+                [자동화 철학 인사이트]<br>
+                자동화는 단순히 도구를 늘리는 것이 아니라 '나의 물리적인 시간을 되찾는 길'입니다. 1인 기업이 이 구조를 구축하면 인건비 없이 최고의 신입사원을 채용한 것과 같은 레버리지를 얻게 됩니다[cite: 10].
+            </div>
+        </div>
+    </details>
+
+    <!-- [AI 분석 전용] 스텔스 지식 베이스 -->
+    <details id="admin-backup" class="backup-details">
+        <summary class="backup-summary"><i class="fa-solid fa-lock"></i> [AI DB] 스텔스 지식 베이스 자료</summary>
+        <div class="backup-content">
+            [참고 콘텐츠 메타데이터]<br>
+            - 영상 제목: 클로드 코드 95% 마스터하기, 2시간이면 충분합니다 (완전 초보용)[cite: 10]<br>
+            - 채널명: 태오의 실행 비즈니스 | AI 에이전트[cite: 10]<br>
+            - 핵심 키워드: VS Code, Claude Code, claude.md, Play MCP(카카오 나채방), GitHub Push, Routines[cite: 10]<br><br>
+            [지식 베이스 분석 메모]<br>
+            단순 채팅형 AI의 한계를 넘어 터미널에서 구동되는 로컬 AI 에이전트 구축에 관한 2시간 분량의 심화 워크플로우[cite: 10]. 프로 요금제가 필수적이며, 핵심은 'Edit/Architect' 모드의 이해와 파일 권한 제어에 있음[cite: 10]. 외부 세계와의 통신(API)은 Play MCP로 뚫어내고, 완성된 파이프라인의 오프라인 실행은 GitHub와 클라우드 루틴 스케줄링으로 해결함[cite: 10]. 코딩을 몰라도 에러 메시지를 던져주며 AI가 스스로 디버깅하게 만드는 '핑퐁(Ping-Pong)' 방식이 핵심 행동 강령임[cite: 10].
+        </div>
+    </details>
+
+</div>
+
+<script>
+    // 관리자 모드 토글
+    function toggleBackup() {
+        const backupSection = document.getElementById('admin-backup');
+        if (backupSection.style.display === 'none' || backupSection.style.display === '') {
+            backupSection.style.display = 'block';
+            alert("🔓 관리자 모드: AI 스텔스 지식 베이스가 활성화되었습니다.");
+        } else {
+            backupSection.style.display = 'none';
+        }
+    }
+
+    // PPT 슬라이드 네비게이션 스크립트 (클릭 액션 구현)
+    function moveSlide(direction) {
+        const container = document.getElementById('ppt-container');
+        if (event && event.stopPropagation) event.stopPropagation();
+        
+        const slideWidth = container.clientWidth;
+        container.scrollBy({ left: direction * slideWidth, behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>

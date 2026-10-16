@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>편집 프로그램 없이 Claude '모션 스튜디오'로 모션그래픽 영상 만들기</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    
+    <style>
+        :root { --bg-color: #0f1115; --card-bg: #1a1d24; --text-main: #e2e8f0; --text-sub: #94a3b8; --accent: #6366f1; --success: #10b981; --step-color: #f59e0b; --border-color: #2d3748; }
+        body { font-family: 'Pretendard', sans-serif; line-height: 1.5; color: var(--text-main); background-color: var(--bg-color); margin: 0; padding: 40px 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 40px; padding-bottom: 30px; border-bottom: 1px solid var(--border-color); }
+        .badge { background: rgba(99, 102, 241, 0.1); color: #818cf8; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; display: inline-block; margin-bottom: 15px; border: 1px solid rgba(99, 102, 241, 0.2); user-select: none; cursor: pointer; }
+        h1 { font-size: 30px; font-weight: 800; margin: 0 0 15px 0; letter-spacing: -0.5px; color: #fff; }
+        .source-link { color: var(--text-sub); font-size: 14px; margin-top: 10px; }
+        .visual-summary { display: flex; gap: 15px; margin-bottom: 30px; }
+        .visual-card { flex: 1; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; text-align: center; }
+        .visual-card i { font-size: 28px; color: var(--accent); margin-bottom: 12px; }
+        .visual-card h3 { margin: 0 0 8px 0; font-size: 15px; color: #fff; }
+        .visual-card p { margin: 0; font-size: 13px; color: var(--text-sub); word-break: keep-all; }
+        details { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 15px; overflow: hidden; }
+        details[open] { border-color: var(--step-color); box-shadow: 0 0 0 1px var(--step-color); }
+        summary { padding: 18px 20px; font-size: 16px; font-weight: 600; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; color: #fff; }
+        summary::-webkit-details-marker { display: none; }
+        summary:after { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--text-sub); transition: transform 0.2s; }
+        details[open] summary:after { transform: rotate(180deg); color: var(--step-color); }
+        .step-num { display: inline-block; background: var(--step-color); color: #fff; border-radius: 6px; padding: 2px 8px; font-size: 14px; margin-right: 8px; }
+        .content-box { padding: 0 20px 20px 20px; border-top: 1px solid var(--border-color); margin-top: 5px; padding-top: 20px; }
+        .highlight-box { background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success); padding: 12px 15px; border-radius: 0 8px 8px 0; margin-bottom: 20px; font-size: 14px; font-weight: 600; color: var(--success); }
+        ol, ul { padding-left: 20px; margin: 0; }
+        li { margin-bottom: 16px; font-size: 14px; color: var(--text-main); line-height: 1.5; padding-left: 5px; }
+        ol li::marker { font-weight: 800; color: var(--step-color); }
+        ul { list-style: none; }
+        ul li { position: relative; padding-left: 24px; }
+        ul li::before { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; left: 0; top: 1px; color: var(--accent); font-size: 13px; }
+        li span.tag { color: #fff; font-weight: 600; margin-right: 6px; }
+        .prompt-box { background: #0b0c10; border: 1px solid #374151; padding: 15px; border-radius: 8px; font-size: 13px; color: #818cf8; margin-top: 10px; font-family: monospace; line-height: 1.6; }
+        #admin-backup { display: none; margin-top: 40px; border-color: #ef4444; }
+        .backup-summary { color: #fca5a5; font-size: 15px; }
+        .backup-content { background: #0b0c10; color: #64748b; font-size: 13px; font-family: monospace; max-height: 250px; overflow-y: auto; padding: 20px; border-top: 1px solid #ef4444; }
+        @media (max-width: 600px) { .visual-summary { flex-direction: column; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <!-- 🧭 대문으로 돌아가기 상단 네비게이션 바 -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+            <a href="index.html" style="color: var(--text-sub); text-decoration: none; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: color 0.2s;">
+                <i class="fa-solid fa-arrow-left"></i> 대문으로 돌아가기
+            </a>
+            <div class="badge" ondblclick="toggleBackup()" style="margin-bottom: 0;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> AI & AUTOMATION
+            </div>
+        </div>
+        <h1>편집 프로그램 없이 Claude '모션 스튜디오'로 모션그래픽 영상 만들기</h1>
+        <div class="source-link">
+            <i class="fa-solid fa-book-open"></i> 자체 검증 실전 노하우 아카이브
+        </div>
+    </header>
+
+    <div class="visual-summary">
+        <div class="visual-card">
+            <i class="fa-solid fa-clapperboard"></i>
+            <h3>문서가 영상으로</h3>
+            <p>글 한 장을 입력하면 기획부터 연출, 렌더링까지 자동으로 모션그래픽 영상을 완성합니다.</p>
+        </div>
+        <div class="visual-card">
+            <i class="fa-solid fa-eye"></i>
+            <h3>중간 캔버스 검수</h3>
+            <p>완성 전 눈으로 장면(아트보드)을 먼저 확인하고 수정하여 100% 마음에 드는 결과를 냅니다.</p>
+        </div>
+        <div class="visual-card">
+            <i class="fa-solid fa-palette"></i>
+            <h3>참조 이미지 연동</h3>
+            <p>말로 표현하기 어려운 독특한 색감과 무드를 이미지 한 장으로 완벽하게 이식합니다.</p>
+        </div>
+    </div>
+
+    <details open>
+        <summary><span class="step-num">STEP 1</span> 모션 스튜디오 스킬 설치 및 사전 준비</summary>
+        <div class="content-box">
+            <div class="highlight-box">
+                <i class="fa-solid fa-lightbulb"></i> 핵심 포인트: 결과물이 마음에 안 들 때 처음부터 다시 만들 필요 없이, 생성 전에 '중간 캔버스'를 두어 직접 고칠 수 있는 것이 가장 큰 강점입니다.
+            </div>
+            <ol>
+                <li><span class="tag">스킬 파일 다운로드:</span> 깃허브 등에서 '모션 스튜디오(Motion Studio)' 전용 스킬 파일을 내려받습니다.</li>
+                <li><span class="tag">클로드에 스킬 등록:</span> 클로드 메뉴에서 '사용자 지정' ➔ '추가' 버튼을 누르고 스킬 업로드를 선택한 뒤 해당 파일을 끌어다 놓습니다.</li>
+                <li><span class="tag">초기 환경 점검:</span> 설치 직후 클로드가 준비물(FFmpeg, 파이썬 패키지, 사운드 폰트, 기본 글꼴 4가지)을 자동 점검합니다. 부족한 항목이 있다면 안내에 따라 세팅을 마칩니다.</li>
+            </ol>
+        </div>
+    </details>
+
+    <details>
+        <summary><span class="step-num">STEP 2</span> 시작 카드 설정 및 5가지 핵심 옵션</summary>
+        <div class="content-box">
+            <ol>
+                <li><span class="tag">작업 시작:</span> 채팅창에 <i>"모션 그래픽 만들어 줘"</i>라고 입력하면 시작 카드가 활성화됩니다.</li>
+                <li><span class="tag">1. 내용 입력:</span> 직접 텍스트를 적거나, 기존에 작성된 문서/원고 파일의 위치를 알려줍니다.</li>
+                <li><span class="tag">2. 화면 비율:</span> 쇼츠·릴스용 세로(9:16) 또는 유튜브용 가로(16:9) 비율 중 선택합니다.</li>
+                <li><span class="tag">3~5. 분위기 및 오디오:</span> 나레이션 여부, 디자인 분위기(깔끔, 밝고 경쾌, 어둡고 세련, 따뜻한 손그림 등), 그리고 움직임의 텐션을 설정합니다. (원하지 않으면 건너뛰기 가능)</li>
+            </ol>
+        </div>
+    </details>
+
+    <details>
+        <summary><span class="step-num">STEP 3</span> 캔버스 검수, 나레이션 녹음 및 최종 굽기</summary>
+        <div class="content-box">
+            <ol>
+                <li><span class="tag">첫 번째 확인 (캔버스 검수):</span> 스킬이 각 장면을 아트보드(캔버스) 형태로 그려냅니다. 화면을 보며 고치고 싶은 곳을 말이나 노트 패치로 수정 지시한 뒤 <i>"검수 끝"</i>을 입력합니다.</li>
+                <li><span class="tag">나레이션 연동:</span> 나레이션을 선택했다면 문장 단위로 원고가 나옵니다. 이를 직접 녹음해서 업로드하면, 스킬이 앞뒤 빈 소리를 자르고 장면에 맞춰 정밀 동기화합니다.</li>
+                <li><span class="tag">스타일 참조 이미지:</span> 특유의 색감이나 무드를 원할 때 분위기를 대변할 이미지 한 장을 함께 넣으면 색상과 느낌을 그대로 반영합니다.</li>
+                <li><span class="tag">두 번째 확인 및 굽기:</span> 클로드가 최종 점검 후 <i>"굽기를 진행할까요?"</i>라고 물어보면 최종 승인(굽기)하여 MP4 영상을 완성합니다.</li>
+            </ol>
+            <div class="prompt-box">
+                [핵심 노하우]<br>
+                그림이나 목소리를 AI가 새로 그려내지 않고 내 가이드와 소스를 기반으로 움직임과 편집만 완벽하게 자동화하므로 결과물의 안정성이 매우 높습니다.
+            </div>
+        </div>
+    </details>
+
+    <!-- [AI 분석 전용] 스텔스 지식 베이스 -->
+    <details id="admin-backup" class="backup-details">
+        <summary class="backup-summary"><i class="fa-solid fa-lock"></i> [AI DB] 스텔스 지식 베이스 자료</summary>
+        <div class="backup-content">
+            [참고 콘텐츠 메타데이터]<br>
+            - 원본 유튜브 링크: https://www.youtube.com/watch?v=RbWtRPLK04o<br>
+            - 채널명: 미드저니 코리아 조남경<br>
+            - 영상 제목: 🎬 편집 프로그램 없이, Claude로 모션그래픽 영상 만들기 | motion-studio 사용법<br><br>
+            [지식 베이스 분석 메모]<br>
+            클로드 스킬인 '모션 스튜디오(Motion Studio)'를 활용하여 텍스트 문서로부터 모션그래픽 영상을 자동 생성하는 워크플로우 가이드. 깃허브 스킬 파일 설치, FFmpeg/파이썬/사운드폰트/폰트 필수 패키지 점검, 시작 카드를 통한 5가지 옵션(내용, 비율, 나레이션, 디자인 분위기, 움직임 분위기) 설정. 특히 완성 전 '중간 캔버스(아트보드) 검수' 단계와 노트 패치 수정, 문장 단위 나레이션 싱크, 레퍼런스 이미지 색감 추출 및 최종 '굽기' 프로세스가 핵심임.
+        </div>
+    </details>
+
+</div>
+
+<script>
+    function toggleBackup() {
+        const backupSection = document.getElementById('admin-backup');
+        if (backupSection.style.display === 'none' || backupSection.style.display === '') {
+            backupSection.style.display = 'block';
+            alert("🔓 관리자 모드: AI 스텔스 지식 베이스가 활성화되었습니다.");
+        } else {
+            backupSection.style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>
