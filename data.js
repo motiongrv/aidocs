@@ -1,8 +1,12 @@
 // 💡 사이트의 모든 데이터가 저장되는 곳입니다. 
 // 새로운 가이드가 생기면 이 배열 맨 위에 복붙으로 한 줄만 추가하시면 됩니다.
+// 
+// [관리자 제어 옵션] - 항목 맨 끝에 아래 코드를 추가해보세요!
+// - 상단 고정(별표): featured: true
+// - 임시 숨김: hidden: true
 
 const archiveData = [
-    { id: 23, title: "제미나이 4 아르곤 vs GPT 아스트라 vs 클로드 오퍼스", category: "AI Insight", icon: "fa-robot", date: "2026-10-17", url: "guide-ai-model-showdown.html", desc: "3대장 AI 모델의 코딩, 기획력, 환각 제어력, 그리고 비용/시간(ROI)까지 철저히 검증한 6라운드 테스트 딥다이브." },
+    { id: 23, title: "제미나이 4 아르곤 vs GPT 아스트라 vs 클로드 오퍼스", category: "AI Insight", icon: "fa-robot", date: "2026-10-17", url: "guide-ai-model-showdown.html", desc: "3대장 AI 모델의 코딩, 기획력, 환각 제어력, 그리고 비용/시간(ROI)까지 철저히 검증한 6라운드 테스트 딥다이브.", featured: true },
     { id: 22, title: "Claude Opus 5.5 x MiniMax: AI 드라마 비용 5배 절감", category: "Video", icon: "fa-masks-theater", date: "2026-10-15", url: "guide-22-claude-opus-minimax-cost-optimization.html", desc: "긴 맥락을 기억하는 Opus 5.5와 480p 초안 렌더링으로 실패 비용을 격리한 뒤 고해상도로 출력하는 가성비 워크플로우." },
     { id: 21, title: "Opus 5.5: 프롬프트 10% 하네스 90% 모션그래픽 마스터", category: "Motion Graphic", icon: "fa-gears", date: "2026-10-12", url: "guide-21-opus-harness-motion.html", desc: "단순 프롬프팅을 넘어, 12단계 디렉터 브리프와 160회의 자가 피드백 루프를 구축하여 하이엔드 영상을 렌더링하는 궁극의 워크플로우." },
     { id: 20, title: "Suno × Claude Code: 편집 툴 없이 타이포 뮤직비디오 만들기", category: "Music", icon: "fa-music", date: "2026-10-10", url: "guide-20-claude-suno-music-video.html", desc: "Claude Code와 LRC 메타데이터를 결합해 가사 싱크를 100% 자동으로 맞추고 렌더링하는 3단계 빌드업 공정." },
