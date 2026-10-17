@@ -1,0 +1,28 @@
+// 💡 사이트의 모든 데이터가 저장되는 곳입니다. 
+// 새로운 가이드가 생기면 이 배열 맨 위에 복붙으로 한 줄만 추가하시면 됩니다.
+
+const archiveData = [
+    { id: 23, title: "제미나이 4 아르곤 vs GPT 아스트라 vs 클로드 오퍼스", category: "AI Insight", icon: "fa-robot", date: "2026-10-17", url: "guide-ai-model-showdown.html", desc: "3대장 AI 모델의 코딩, 기획력, 환각 제어력, 그리고 비용/시간(ROI)까지 철저히 검증한 6라운드 테스트 딥다이브." },
+    { id: 22, title: "Claude Opus 5.5 x MiniMax: AI 드라마 비용 5배 절감", category: "Video", icon: "fa-masks-theater", date: "2026-10-15", url: "guide-22-claude-opus-minimax-cost-optimization.html", desc: "긴 맥락을 기억하는 Opus 5.5와 480p 초안 렌더링으로 실패 비용을 격리한 뒤 고해상도로 출력하는 가성비 워크플로우." },
+    { id: 21, title: "Opus 5.5: 프롬프트 10% 하네스 90% 모션그래픽 마스터", category: "Motion Graphic", icon: "fa-gears", date: "2026-10-12", url: "guide-21-opus-harness-motion.html", desc: "단순 프롬프팅을 넘어, 12단계 디렉터 브리프와 160회의 자가 피드백 루프를 구축하여 하이엔드 영상을 렌더링하는 궁극의 워크플로우." },
+    { id: 20, title: "Suno × Claude Code: 편집 툴 없이 타이포 뮤직비디오 만들기", category: "Music", icon: "fa-music", date: "2026-10-10", url: "guide-20-claude-suno-music-video.html", desc: "Claude Code와 LRC 메타데이터를 결합해 가사 싱크를 100% 자동으로 맞추고 렌더링하는 3단계 빌드업 공정." },
+    { id: 19, title: "클로드 무료 버전: 0원으로 MP4 모션그래픽 추출 완벽 가이드", category: "Motion Graphic", icon: "fa-video", date: "2026-10-08", url: "guide-19-claude-free-motion.html", desc: "유료 결제 없이 이력서 영상을 만들고, 화면 녹화 대신 클로드 안에서 직접 1080p MP4로 렌더링하는 마법의 프롬프트." },
+    { id: 18, title: "Opus 5.5: 2레이어 실사 모션그래픽 & Motion OS 에디터", category: "Motion Graphic", icon: "fa-layer-group", date: "2026-10-05", url: "guide-18-opus-insane-motion.html", desc: "실사 AI 비디오 위에 모션 UI를 오버레이하는 2-Layer 기법과 Motion OS 에디터를 통한 직관적 통제법." },
+    { id: 17, title: "클로드 오퍼스 5.5: 편집 툴 없는 모션그래픽 완전 자동화", category: "Motion Graphic", icon: "fa-wand-magic-sparkles", date: "2026-10-02", url: "guide-17-claude-opus-motion-graphic.html", desc: "Whisper 음성 인식 기반의 칼싱크, 랜딩페이지 광고 생성 및 클로드의 자율 연출 심화 파이프라인." },
+    { id: 16, title: "Claude Skills를 활용한 AI 비디오 자동화 파이프라인", category: "Video", icon: "fa-film", date: "2026-09-28", url: "guide-16-claude-ai-video-workflow.html", desc: "Story Bible부터 Shot Collar까지 4가지 스킬로 세계관을 구축하고 하루 만에 단편 영화를 찍어내는 딥다이브." },
+    { id: 15, title: "클로드 오퍼스 5.5: 편집 프로그램 없는 모션그래픽", category: "Motion Graphic", icon: "fa-clapperboard", date: "2026-09-25", url: "guide-15-claude-opus-motion.html", desc: "사고 수준(Effort)을 극대화하여 텍스트, 오디오, 링크만으로 상업용 영상을 찍어내는 파이프라인." },
+    { id: 14, title: "클로드 x 프리미어 프로: 실전 영상편집 90% 자동화", category: "Video", icon: "fa-scissors", date: "2026-09-21", url: "guide-14-claude-video-editing-automation.html", desc: "MCP 연동을 통해 컷편집, 교차편집, 상황별 효과음 배치까지 클로드가 프리미어를 직접 조작하는 실무법." },
+    { id: 13, title: "Suno V6: 상업용 CM송 제작 및 스튜디오 컨트롤 가이드", category: "Music", icon: "fa-compact-disc", date: "2026-09-18", url: "guide-13-suno-v6-cm-song.html", desc: "초수 지정부터 악기 트랙 분리(Stem), 가사 수정 등 상업 매체용 음악을 완벽하게 통제하는 법." },
+    { id: 12, title: "AI가 만들어도 내 작업처럼: 2D 모션 마에스트로 가이드", category: "Motion Graphic", icon: "fa-pen-nib", date: "2026-09-15", url: "guide-12-ai-motion-maestro.html", desc: "앵커 이미지를 활용해 AIT를 벗겨내고, 모션 원리 프롬프팅으로 영상을 직접 디렉팅하는 노하우." },
+    { id: 11, title: "Claude Code 신기능 'Mods' 완벽 활용 가이드", category: "Coding", icon: "fa-terminal", date: "2026-09-12", url: "guide-11-claude-mods.html", desc: "커스텀 UI 패널과 4단계 훅(Hook) 제어를 통해 내 입맛에 맞는 터미널 환경 개조하기." },
+    { id: 10, title: "VS Code 기반 클로드 코드(Claude Code) 자동화 마스터", category: "Coding", icon: "fa-code", date: "2026-09-10", url: "guide-10-claude-code-automation.html", desc: "claude.md 헌법 작성부터 GitHub 연동까지, 코딩 제로 AI 업무 자동화 구축법." },
+    { id: 9, title: "AI 주식 비서 시스템 및 수익 극대화 구축 가이드", category: "Automation", icon: "fa-chart-line", date: "2026-09-07", url: "guide-09-ai-stock-assistant.html", desc: "클로드와 카카오톡 MCP 연동, 데일리 브리핑 및 역발상 인터뷰로 뇌동매매를 차단하는 룰 세팅법." },
+    { id: 8, title: "Claude 에이전트 기반 'Agent Edits' 영상 편집 하니스", category: "Video", icon: "fa-robot", date: "2026-09-05", url: "guide-08-agent-edits.html", desc: "타임라인 편집을 벗어나 원본 영상을 주입해 AI 에이전트가 원샷으로 완성하는 파이프라인." },
+    { id: 7, title: "Claude '모션 스튜디오'로 모션그래픽 영상 만들기", category: "Motion Graphic", icon: "fa-photo-film", date: "2026-09-02", url: "guide-07-motion-studio.html", desc: "편집 프로그램 없이 기획부터 연출, 캔버스 검수 및 나레이션 싱크까지 자동으로 완성하는 법." },
+    { id: 6, title: "Seedance 2.5 언센서드 버전 안전 이용 및 크레딧 최적화", category: "Video", icon: "fa-unlock", date: "2026-08-28", url: "guide-06-seedance-uncensored.html", desc: "공인 플랫폼을 통해 검열 해제 모델에 접근하고 씬 연장 꼼수로 비용을 아끼는 실전 팁." },
+    { id: 5, title: "수노(Suno) 가사 칸 메타태그 15가지 실전 연출", category: "Music", icon: "fa-music", date: "2026-08-25", url: "guide-05-suno-metatags.html", desc: "대괄호 태그를 활용해 곡의 효과음, 속삭임, 스크래치 등 보컬과 무드를 직접 제어하는 법." },
+    { id: 4, title: "웹 기반 바이브 코딩으로 모션 그래픽 영상 제작", category: "Coding", icon: "fa-laptop-code", date: "2026-08-20", url: "guide-04-vibe-coding-video.html", desc: "무거운 렌더링을 우회하여 HTML/CSS 기술로 고해상도 인포그래픽 영상을 찍어내는 패러다임." },
+    { id: 3, title: "Claude Code 피사체 분리 및 모션 그래픽", category: "Motion Graphic", icon: "fa-object-group", date: "2026-08-15", url: "guide-03-claude-motion.html", desc: "로컬 환경에서 인물과 배경을 분리하고 프리미어 급 뎁스 연출을 코딩 없이 완성하는 법." },
+    { id: 2, title: "클로드 기반 나만의 자동 컷편집기 개발", category: "Coding", icon: "fa-scissors", date: "2026-08-10", url: "guide-02-auto-editor.html", desc: "오픈소스 Whisper와 자연어 바이브 코딩을 결합해 서버비 제로의 맞춤형 편집 툴 빌드." },
+    { id: 1, title: "무료 AI 영상 제작 및 클로드 x 힉스필드 완벽 가이드", category: "Video", icon: "fa-video", date: "2026-08-05", url: "guide-01-higgsfield-mcp.html", desc: "플랫폼 모델 교차 사용을 통해 크레딧 비용 없이 고품질 영상을 대량 생산하는 워크플로우." }
+];
